@@ -1,5 +1,5 @@
 {
-  "name": "redibase",
+  "name": "redibase - the redis powered firebase",
   "version": "1.0.1",
   "description": "",
   "main": "index.js",
@@ -7,5 +7,9 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "promise-redis": "0.0.5",
+    "sucrase": "^3.12.1"
+  }
 }
