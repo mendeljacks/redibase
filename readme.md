@@ -1,8 +1,9 @@
-## Aim
+## Redibase
 
-This package aims to offer an open source alternative to firebase which is powered by redis.
+This package is an redis based alternative to googl's firebase.
 The goal is to harness the speed of vanilla redis while adding much loved firebase like features.
-With this package you can subscribe to data changes, store deeply nested data while still owning your stack.
+With this package you can subscribe to data changes, store deeply nested data without stringifying and you can own your stack.
+
 
 ## Usage
 
