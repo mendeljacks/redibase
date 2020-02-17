@@ -1,9 +1,10 @@
 import * as redis from 'redis'
-import { redis_get } from './helpers/redis/redis'
+import { redis_get, redis_set } from './helpers/redis/redis'
+import { path_to_key } from './helpers/pure/path_to_key'
 
 interface redibase_root {
-    get: (path_list: any[][]) => Promise<string>
-    // set: 
+    get: (path: any[]) => Promise<any>
+    set: (path: any[], payload: any) => Promise<any>
     quit: () => {}
 
 }
@@ -16,8 +17,8 @@ const connect = (args): redibase_root => {
     //   });
     const quit = () => client.quit()
     return {
-        get: (path_list) => redis_get(path_list, client),
-        // set,
+        get: (path) => redis_get([path_to_key(path)], client),
+        set: (path, obj) => redis_set(obj, client),
         // on,
         quit
     }
