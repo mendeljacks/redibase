@@ -1,6 +1,6 @@
 ## Redibase
 
-This package is an redis based alternative to googl's firebase.
+This package is the redis based alternative to google's firebase.
 The goal is to harness the speed of vanilla redis while adding much loved firebase like features.
 With this package you can subscribe to data changes, store deeply nested data without stringifying and you can own your stack.
 
@@ -16,7 +16,7 @@ Initialise a redis connection
 
 ```js
 import {connect} from 'redibase'
-const redibase = connect('redis://....') // params are sent directly through to promise-redis
+const redibase = connect('redis://....') // params are sent directly through to promise-redis constructor
 export redibase
 ```
 Modify your data
