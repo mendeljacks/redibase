@@ -16,7 +16,7 @@ Initialise a redis connection
 
 ```js
 import {connect} from 'redibase'
-const redibase = connect('redis://....') // params are sent directly through to promise-redis constructor
+const redibase = connect('redis://....') // params are sent directly through to redis constructor
 export redibase
 ```
 Modify your data
@@ -47,5 +47,5 @@ redibase.on(['animals', 0, 'name'], (old_value, new_value) => console.log(old_va
 
 ## Main dependencies
 
-* [promise-redis](https://www.npmjs.com/package/promise-redis) - To access redis
-* [Ramda](https://www.npmjs.com/package/ramda) - To manipulate deeply nested objects into redis key value pairs
+* [redis](https://www.npmjs.com/package/redis) - To access redis
+* [Ramda](https://www.npmjs.com/package/ramda) - To manipulate deeply nested objects
