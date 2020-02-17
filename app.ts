@@ -1,22 +1,33 @@
-const redis = require("redis");
-const client = redis.createClient();
- 
-client.on("error", function(error) {
-  console.error(error);
-});
- 
-client.set("key", "value", redis.print);
-client.get("key", redis.print);
-const connect = (args) => {
+import * as redis from 'redis'
+
+
+interface redibase_root {
+    get: (path_list: any[][], client: any) => Promise<string>
+    quit: () => {}
+    // set: Function
+
+}
+
+const get = (path_list, client) => {
+    console.log('you ran a get', path_list)
+    return Promise.resolve('ok')
+}
+const set = (args, client) => console.log('you ran a set', args)
+const on = (args, client) => console.log('you ran a on', args)
+
+
+const connect = (args): redibase_root => {
     console.log('connecting to', args)
     const client = redis.createClient(args)
-    const get = (args) => console.log('you ran a get', args)
-    const set = (args) => console.log('you ran a set', args)
-    const on = (args) => console.log('you ran a on', args)
+    // client.on("error", function(error) {
+    //     console.error(error);
+    //   });
+    const quit = () => client.quit()
     return {
         get,
         set,
-        on
+        on,
+        quit
     }
 }
 export {connect}
