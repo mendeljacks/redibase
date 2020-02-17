@@ -10,6 +10,7 @@
   "license": "MIT",
   "dependencies": {
     "promise-redis": "0.0.5",
+    "ramda": "^0.27.0",
     "sucrase": "^3.12.1"
   }
 }
