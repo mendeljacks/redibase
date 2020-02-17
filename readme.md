@@ -45,7 +45,11 @@ import {redibase} from 'src/config/redibase' // import the instance you created
 redibase.on(['animals', 0, 'name'], (old_value, new_value) => console.log(old_value, new_value))
 ```
 
-## Main dependencies
+Close the connection
 
-* [redis](https://www.npmjs.com/package/redis) - To access redis
-* [Ramda](https://www.npmjs.com/package/ramda) - To manipulate deeply nested objects
+```js
+import {redibase} from 'src/config/redibase' // import the instance you created
+redibase.quit()
+```
+
+

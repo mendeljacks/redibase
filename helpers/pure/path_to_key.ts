@@ -1,0 +1,1 @@
+export const path_to_key = path => path.join('.') 
