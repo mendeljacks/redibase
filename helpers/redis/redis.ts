@@ -5,7 +5,7 @@ export const redis_get = (key_list: string[], client: any): Promise<any> => {
     console.log('you ran a get', key_list)
 
     return new Promise(function (resolve, reject) {
-        client.mget(keys, (err, res) => {
+        client.mget(key_list, (err, res) => {
             if (err) return reject(err)
             resolve(res)
         })
