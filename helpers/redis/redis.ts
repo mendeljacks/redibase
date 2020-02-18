@@ -8,7 +8,7 @@ export const redis_get = (key_list: string[], client: any): Promise<any> => {
             if (err) return reject(err)
             resolve(res)
         })
-    });
+    })
 
 }
 export const redis_delete = (key_list: string[], client: any): Promise<any> => {
@@ -29,6 +29,6 @@ export const redis_set = (obj, client) => {
             if (err) return reject(err)
             resolve(res)
         })
-    });
+    })
 }
 export const redis_on = (args, client) => console.log('you ran a on', args)

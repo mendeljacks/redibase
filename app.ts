@@ -1,6 +1,8 @@
 import * as redis from 'redis'
 import { redis_get, redis_set, redis_delete } from './helpers/redis/redis'
 import { path_to_key } from './helpers/pure'
+import { curry } from 'ramda'
+import { set } from './set'
 
 interface redibase_root {
     get: (path: string | any[]) => Promise<any>
@@ -15,7 +17,7 @@ const connect = (args): redibase_root => {
     const client = redis.createClient(args)
     return {
         get: (path) => redis_get([path_to_key(path)], client),
-        set: (path, payload) => redis_set({ [path_to_key(path)]: payload }, client),
+        set: curry((path, payload) => set(path, payload, client)),
         delete: (key) => redis_delete([String(key)], client),
         quit: () => client.quit()
     }
