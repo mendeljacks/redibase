@@ -38,6 +38,12 @@ redibase.get('animals.0') // [{name: 'cow', age: 2}]
 redibase.get(['animals',0]) // or with array notation
 
 ```
+Delete data
+
+```js
+import {redibase} from 'src/config/redibase' // import the instance you created
+redibase.delete('animals') 
+```
 
 Subscribe to data changes
 

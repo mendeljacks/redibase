@@ -1,13 +1,17 @@
 import {connect} from '../index'
 import {equals} from 'ramda'
+import {decorate, undecorate} from 'helpers/pure.ts'
 require('dotenv').config()
 
 test('Can get and set some data', async () => {
     const redibase = connect(process.env.redis)
-    
-    const response1 = await redibase.set('key1', 'yup')
-    const response3 = await redibase.get('key1')
+
+    const r1 = await redibase.set('key1', 'yup')
+    const r2 = await redibase.get('key1')
+    expect(equals(r2, ['yup'])).toBe(true)
+    const r3 = await redibase.delete('key1')
+    const r4 = await redibase.get('key1')
+    expect(equals(r4, [null])).toBe(true)
 
     redibase.quit()
-    expect(equals(response3, ['yup'])).toBe(true)
 })
