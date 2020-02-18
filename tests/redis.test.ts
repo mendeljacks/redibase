@@ -2,21 +2,6 @@ import {connect} from '../index'
 import {decorate, undecorate} from '../helpers/pure'
 require('dotenv').config()
 
-const payload = {
-    animals: [
-        {
-            name: 'cow',
-            age: 2
-        }, 
-        {
-            name: 'sheep',
-            noise: 'beh'
-        }
-    ],
-    is_cute: 'true',
-    num: '42'
-}
-
 test('Can get and set some data', async () => {
     const redibase = connect(process.env.redis)
 
@@ -29,7 +14,6 @@ test('Can get and set some data', async () => {
 
     redibase.quit()
 })
-    await redibase.set(['animals', 0, 'name'], 'sheep')
 
 test('can decorate and undecorate', () => {
     const i1 = 1
