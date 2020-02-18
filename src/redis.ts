@@ -1,4 +1,4 @@
-import { path_to_key } from "../../helpers/pure";
+import { path_to_key } from "./pure";
 import { unnest, toPairs } from 'ramda'
 
 export const redis_get = (key_list: string[], client: any): Promise<any> => {

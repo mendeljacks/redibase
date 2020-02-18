@@ -1,2 +1,2 @@
 require("sucrase/register/ts");
-module.exports = require('./app')
+module.exports = require('./src/app')

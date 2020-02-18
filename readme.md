@@ -27,6 +27,11 @@ import {redibase} from 'src/config/redibase' // import the instance you created
 redibase.set(['animals',0], {name: 'cow', age: 2})
 redibase.set('people', [{name: 'john'},{name: 'sandy'}])) // set uses ramda's assocPath under the hood
 
+// the set function is curried so you can also pass the second parameter in later
+// settings: {mode: 0}
+const set_mode = redibase.set('settings.mode')
+set_mode(1)
+set_mode(2)
 ```
 
 Retrieve your data
