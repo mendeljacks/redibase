@@ -55,7 +55,7 @@ Subscribe to data changes
 ```js
 import {redibase} from 'src/config/redibase' // import the instance you created
 // give a path and a callback
-redibase.on(['animals', 0, 'name'], (old_value, new_value) => console.log(old_value, new_value))
+redibase.on(['animals', 0, 'name'], (new_value) => console.log(new_value))
 ```
 
 Close the connection
