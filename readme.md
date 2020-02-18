@@ -1,7 +1,7 @@
 ## Redibase
 
 This package is the redis based alternative to google's firebase.
-The goal is to harness the speed of vanilla redis while adding much loved firebase like features.
+The goal is to harness the speed of vanilla redis while adding much loved firebase features.
 With this package you can subscribe to data changes, store deeply nested data without stringifying and you can own your stack.
 
 
@@ -25,7 +25,7 @@ Modify your data
 import {redibase} from 'src/config/redibase' // import the instance you created
 // give a path and an object to replace at that location
 redibase.set(['animals',0], {name: 'cow', age: 2})
-redibase.set('people', [{name: 'john'},{name: 'sandy'}])) // set uses ramda's assocPath under the hood
+redibase.set('people', [{name: 'john'},{name: 'sandy'}])) 
 
 // the set function is curried so you can also pass the second parameter in later
 // settings: {mode: 0}
@@ -38,7 +38,6 @@ Retrieve your data
 
 ```js
 import {redibase} from 'src/config/redibase' // import the instance you created
-// give a path and an object to replace at that location
 redibase.get('animals.0') // [{name: 'cow', age: 2}]
 redibase.get(['animals',0]) // or with array notation
 
