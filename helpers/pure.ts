@@ -7,8 +7,6 @@ export const path_to_key = path => type(path) === "Array" ? path.join('.') : pat
 export const decorate = (value: any): string => serialize(value, {ignoreFunction: true});
 export const undecorate = (serializedJavascript: string): any => eval('(' + serializedJavascript + ')')
 
-
-
 export const concat_if_nonexistent = (array, append_array) => compose(uniq, concat(array))(append_array)
 
 export const json_to_path_values = (val): (any[])[] => {
