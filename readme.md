@@ -24,7 +24,15 @@ Modify your data
 ```js
 import {redibase} from 'src/config/redibase' // import the instance you created
 // give a path and an object to replace at that location
-redibase.set(['animals',0], {name: 'cow', age: 2}) // set uses ramda's assocPath under the hood
+redibase.set([
+    {
+        path: ['animals',0], 
+        payload: {name: 'cow', age: 2}
+    },
+    {
+        path: ['people'],
+        payload: [{name: 'john'},{name: 'sandy'}]
+    } ]) // set uses ramda's assocPath under the hood
 
 ```
 
@@ -33,7 +41,8 @@ Retrieve your data
 ```js
 import {redibase} from 'src/config/redibase' // import the instance you created
 // give a path and an object to replace at that location
-redibase.get(['animals']) // [{name: 'cow', age: 2}]
+redibase.get([['animals'], ['people', 0]]) // [{name: 'cow', age: 2}]
+redibase.get(['animals.0', 'people']) // or with dot notation
 
 ```
 
