@@ -1,4 +1,4 @@
-import { assocPath, chain, compose, concat, is, keys, map, pathOr, reduce, split, type, uniq, unnest } from "ramda";
+import { assocPath, chain, compose, concat, is, keys, map, pathOr, reduce, split, type, uniq, unnest, curry, fromPairs, adjust, toPairs } from "ramda";
 var serialize = require('serialize-javascript')
 
 const is_numeric_string = el => !isNaN(Number(el))
@@ -14,18 +14,22 @@ const json_to_path_list = (val) => {
         const child_paths = unnest(val.map((child, i) =>
             json_to_path_list(child).map(path => [i, ...path])
         ))
-        return child_paths
+         
+        return concat([[]], child_paths)
     }
 
     if (is(Object, val)) {
-        const child_paths = chain((key, i) =>
-            json_to_path_list(val[key]).map(path => [key, ...path])
+        const child_paths = compose(
+            concat([[]]),
+            chain((key, i) =>
+                json_to_path_list(val[key]).map(path => [key, ...path])
+            )
         )(keys(val))
         return child_paths
     }
     return [[]]
-
 }
+
 export const json_to_pairs = (json) => {
     const path_list = json_to_path_list(json)
     return reduce((acc, val) => ({ ...acc, [path_to_key(val)]: pathOr(undefined, val, json) }), {})(path_list)
@@ -37,3 +41,5 @@ export const pairs_to_json = pairs => {
     paths.map(path_el => output = assocPath(path_el.path, path_el.val, output))
     return output
 }
+
+export const mapKeys = curry((fn, obj) => fromPairs(map(adjust(0, fn), toPairs(obj))));
