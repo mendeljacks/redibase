@@ -1,6 +1,6 @@
-import { curry } from 'ramda'
+import { curry, concat } from 'ramda'
 import * as redis from 'redis'
-import { json_to_pairs, key_to_path } from './pure'
+import { json_to_pairs, key_to_path, mapKeys, path_to_key } from './pure'
 import { key_or_path_schema } from './schemas'
 import { user_delete, user_get, user_set } from './user'
 

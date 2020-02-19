@@ -1,4 +1,4 @@
-import { assocPath, chain, compose, concat, is, keys, map, pathOr, reduce, split, type, uniq, unnest } from "ramda";
+import { assocPath, chain, compose, concat, is, keys, map, pathOr, reduce, split, type, uniq, unnest, curry, fromPairs, adjust, toPairs } from "ramda";
 var serialize = require('serialize-javascript')
 
 const is_numeric_string = el => !isNaN(Number(el))
