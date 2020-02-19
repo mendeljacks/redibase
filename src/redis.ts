@@ -10,6 +10,7 @@ export const redis_get = (key_list: string[], client: any): Promise<any> => {
 
 }
 export const redis_delete = (key_list: string[], client: any): Promise<any> => {
+    if (key_list.length === 0) return Promise.resolve(null)
     return Promise.all(key_list.map(key => {
         return new Promise(function (resolve, reject) {
             client.del(key, (err, res) => {
