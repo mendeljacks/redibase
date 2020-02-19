@@ -37,3 +37,5 @@ export const pairs_to_json = pairs => {
     paths.map(path_el => output = assocPath(path_el.path, path_el.val, output))
     return output
 }
+
+export const mapKeys = curry((fn, obj) => fromPairs(map(adjust(0, fn), toPairs(obj))));
