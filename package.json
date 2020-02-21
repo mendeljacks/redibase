@@ -7,11 +7,26 @@
     "test": "node --inspect-brk ./node_modules/jest/bin/jest.js"
   },
   "jest": {
+    "verbose": true,
+    "maxConcurrency": 1,
+    "testMatch": ["<rootDir>/src/tests.test.ts"],
+    "testTimeout":900000,
     "transform": {
       ".(js|jsx|ts|tsx)": "@sucrase/jest-plugin"
     }
   },
   "author": "",
+  "contributors": [
+    {
+      "name": "Mendel Jacks",
+      "email": "mendeljacks@gmail.com",
+      "url": "http://mendeljacks.com"
+    },
+    {
+      "name": "Daniel Jacks",
+      "email": "danielchaimjacks@gmail.com"
+    }
+  ],
   "license": "MIT",
   "keywords": [
     "redis",
@@ -30,7 +45,9 @@
     "@sucrase/jest-plugin": "^2.0.0",
     "@types/jest": "^25.1.2",
     "@types/node": "^13.7.1",
+    "blns": "^2.0.4",
     "dotenv": "^8.2.0",
-    "jest": "^25.1.0"
+    "jest": "^25.1.0",
+    "typescript": "^3.7.5"
   }
 }

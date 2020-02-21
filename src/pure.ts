@@ -1,11 +1,16 @@
-import { assocPath, chain, compose, concat, is, keys, map, pathOr, reduce, split, type, uniq, unnest, curry, fromPairs, adjust, toPairs } from "ramda";
+import { adjust, assocPath, chain, compose, concat, curry, fromPairs, is, keys, map, pathOr, reduce, split, test, toPairs, type, uniq, unnest } from "ramda";
 var serialize = require('serialize-javascript')
 
-const is_numeric_string = el => !isNaN(Number(el))
+export const is_array = el => type(el) === 'Array'
+export const is_object = el => type(el) === 'Object'
+export const is_array_or_object = el => type(el) === 'Array' || type(el) === 'Object'
+
+const is_numeric_string = test(/^0$|^[1-9][0-9]*$/)
 export const path_to_key = path => type(path) === "Array" ? path.join('.') : path
 export const key_to_path = path => type(path) === "String" ? compose(map(el => is_numeric_string(el) ? Number(el) : el), split('.'))(path) : path
-export const decorate = (value: any): string => serialize(value, { ignoreFunction: true });
-export const undecorate = (serializedJavascript: string): any => eval('(' + serializedJavascript + ')')
+
+export const stringify = (value: any): string => serialize(value, { ignoreFunction: true })
+export const parse = (serializedJavascript: string): any => eval('(' + serializedJavascript + ')')
 
 export const concat_if_nonexistent = (array, append_array) => compose(uniq, concat(array))(append_array)
 
@@ -18,7 +23,7 @@ const json_to_path_list = (val) => {
         return concat([[]], child_paths)
     }
 
-    if (is(Object, val)) {
+    if (is_object(val)) {
         const child_paths = compose(
             concat([[]]),
             chain((key, i) =>
@@ -30,9 +35,16 @@ const json_to_path_list = (val) => {
     return [[]]
 }
 
+
+
 export const json_to_pairs = (json) => {
     const path_list = json_to_path_list(json)
-    return reduce((acc, val) => ({ ...acc, [path_to_key(val)]: pathOr(undefined, val, json) }), {})(path_list)
+    return reduce((acc, val) => {
+        const redis_key = path_to_key(val)
+        const given_value = pathOr(undefined, val, json)
+        const redis_value = is_array_or_object(given_value) ? keys(given_value) : given_value 
+        return { ...acc, [redis_key]: redis_value}
+    }, {})(path_list)
 }
 
 export const pairs_to_json = pairs => {
@@ -42,4 +54,4 @@ export const pairs_to_json = pairs => {
     return output
 }
 
-export const mapKeys = curry((fn, obj) => fromPairs(map(adjust(0, fn), toPairs(obj))));
+export const map_keys = curry((fn, obj) => fromPairs(map(adjust(0, fn), toPairs(obj))))
