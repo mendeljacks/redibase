@@ -1,7 +1,7 @@
-import { compose, concat, curry } from 'ramda'
+import { curry } from 'ramda'
 import * as redis from 'redis'
-import { json_to_pairs, key_to_path, mapKeys, path_to_key } from './pure'
-import { key_or_path_schema, allowable_value_schema } from './schemas'
+import { json_to_pairs, key_to_path, map_keys, path_to_key, concat_with_dot } from './pure'
+import { allowable_value_schema, key_or_path_schema } from './schemas'
 import { user_delete, user_get, user_set } from './user'
 
 const connect = (connection_args) => {
@@ -19,11 +19,12 @@ const connect = (connection_args) => {
             return user_get(key_to_path(key), client)
         },
         set: curry((path: string | any [], json) => {
-            const { path_error } = key_or_path_schema.validate(path);
-            const { json_error } = allowable_value_schema.validate(json);
+            const { path_error } = key_or_path_schema.validate(path)
+            const { json_error } = allowable_value_schema.validate(json)
             if (path_error) return Promise.reject(path_error)
             if (json_error) return Promise.reject(json_error)
-            return user_set(key_to_path(path), mapKeys(concat(path_to_key(path)))(json_to_pairs(json)), client)
+            const user_pairs = json_to_pairs(json)
+            return user_set(key_to_path(path), map_keys(concat_with_dot(path_to_key(path)))(user_pairs), client)
         }),
         delete: (key: string | any[]) => {
             const { error } = key_or_path_schema.validate(key);

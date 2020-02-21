@@ -1,11 +1,11 @@
-import { adjust, assocPath, chain, compose, concat, curry, fromPairs, is, keys, map, pathOr, reduce, split, test, toPairs, type, uniq, unnest } from "ramda";
+import { adjust, assocPath, chain, compose, concat, curry, fromPairs, is, keys, map, pathOr, reduce, split, test, toPairs, type, uniq, unnest, join, reject, isEmpty } from "ramda";
 var serialize = require('serialize-javascript')
 
 export const is_array = el => type(el) === 'Array'
 export const is_object = el => type(el) === 'Object'
 export const is_array_or_object = el => type(el) === 'Array' || type(el) === 'Object'
 
-const is_numeric_string = test(/^0$|^[1-9][0-9]*$/)
+export const is_numeric_string = test(/^0$|^[1-9][0-9]*$/)
 export const path_to_key = path => type(path) === "Array" ? path.join('.') : path
 export const key_to_path = path => type(path) === "String" ? compose(map(el => is_numeric_string(el) ? Number(el) : el), split('.'))(path) : path
 
@@ -55,3 +55,8 @@ export const pairs_to_json = pairs => {
 }
 
 export const map_keys = curry((fn, obj) => fromPairs(map(adjust(0, fn), toPairs(obj))))
+
+export const concat_with_dot = curry((a, b) => compose(
+    join('.'),
+    reject(isEmpty)
+)([a, b]))

@@ -12,7 +12,7 @@ export const allowable_value_schema = Joi.alternatives().try(
         Joi.string().pattern(/^0$|^[1-9][0-9]*$/, { invert: true }).pattern(/^[a-zA-Z0-9_]*$/), 
         Joi.link('...')
     ), 
-    Joi.any().allow(null, undefined),
+    Joi.any().allow(null),
     Joi.string(), 
     Joi.number().allow(Infinity, -Infinity, NaN), 
     Joi.bool(), 

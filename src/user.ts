@@ -1,5 +1,5 @@
-import { compose, difference, equals, filter, head, intersection, keys, last, map, pathOr, pickAll, reject, toPairs, unnest, zipObj } from "ramda";
-import { is_array, pairs_to_json, path_to_key } from "./pure";
+import { compose, difference, equals, filter, head, intersection, keys, last, map, pathOr, pickAll, reject, toPairs, unnest, zipObj, dropLast } from "ramda";
+import { is_array, pairs_to_json, path_to_key, is_numeric_string, key_to_path } from "./pure";
 import { redis_delete, redis_get, redis_set } from "./redis";
 
 const nested_get = async (path: [string | number], client) => {
