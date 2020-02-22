@@ -20,6 +20,8 @@ test('Can store and retrieve json', async () => {
     const r1 = await redibase.set('', sample_data)
     const r2 = await redibase.get('people.0.name')
     expect(r2).toEqual('john')
+    const r25 = await redibase.get('')
+    expect(r25).toEqual(sample_data)
 
     const r3 = await redibase.set('animals.1.favorite_color', 'white')
     const r4 = await redibase.get('animals.1.favorite_color')
