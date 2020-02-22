@@ -1,4 +1,4 @@
-import { adjust, assocPath, chain, compose, concat, curry, fromPairs, is, keys, map, pathOr, reduce, split, test, toPairs, type, uniq, unnest, join, reject, isEmpty } from "ramda";
+import { adjust, assocPath, chain, compose, concat, curry, fromPairs, is, keys, map, pathOr, reduce, split, test, toPairs, type, uniq, unnest, join, reject, isEmpty, hasPath, path } from "ramda";
 var serialize = require('serialize-javascript')
 
 export const is_array = el => type(el) === 'Array'
@@ -35,13 +35,23 @@ const json_to_path_list = (val) => {
     return [[]]
 }
 
-
+// like pathOr but doesnt return default when the value is null
+const strict_path_or = (default_val, val_path, obj) => {
+    if (val_path.length === 0) {
+        return obj
+    }
+    if (hasPath(val_path, obj)) {
+        return path(val_path, obj)
+    } else {
+        return default_val
+    }
+}
 
 export const json_to_pairs = (json) => {
     const path_list = json_to_path_list(json)
     return reduce((acc, val) => {
         const redis_key = path_to_key(val)
-        const given_value = pathOr(undefined, val, json)
+        const given_value = strict_path_or(undefined, val, json)
         const redis_value = is_array_or_object(given_value) ? keys(given_value) : given_value 
         return { ...acc, [redis_key]: redis_value}
     }, {})(path_list)
