@@ -97,16 +97,15 @@ test('can stringify and parse', () => {
     expect(parse(stringify(undefined))).toEqual(undefined)
 })
 
-test.skip('Should handle objects with funny key names', async () => {
-
-    const r1 = await redibase.set('key1', { 'not.ok': 'mate' })
-    expect(r1).toEqual('error')
-    const r2 = await redibase.set('key1', { 2: 'mate' })
-    expect(r2).toEqual('error')
+test('Should handle objects with funny key names', async () => {
+    const r1 = await redibase.set('key1', { 'not.ok': 'mate' }).catch((err) => { return err})
+    const r2 = await redibase.set('key1', { 2: 'mate' }).catch((err) => { return err})
     const r3 = await redibase.set('key1', { 'p_p': undefined })
     const r4 = await redibase.set('key1', { 'p_p': [] })
-    const r5 = await redibase.delete('key1')
-
+    expect(r1.message).toEqual('"not.ok" is not allowed') 
+    expect(r2.message).toEqual('"2" is not allowed') 
+    expect(r3).toEqual(undefined) 
+    expect(r4).toEqual(undefined)
 })
 
 test.only('Should pubsub to changes', async (done) => {
