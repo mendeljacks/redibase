@@ -1,4 +1,4 @@
-import { adjust, assoc, assocPath, chain, compose, concat, curry, dropLast, fromPairs, hasPath, isEmpty, isNil, join, keys, last, map, path, reduce, reject, split, test, toPairs, toString, type, uniq, unnest, without } from "ramda";
+import { adjust, any, assoc, assocPath, chain, compose, concat, curry, dropLast, filter, fromPairs, hasPath, isEmpty, isNil, join, keys, last, map, path, pickAll, reduce, reject, split, startsWith, test, toPairs, toString, type, uniq, unnest, values, without } from "ramda";
 var serialize = require('serialize-javascript')
 
 export const is_array = el => type(el) === 'Array'
@@ -47,6 +47,23 @@ const json_to_path_list = (val) => {
     }
     return [[]]
 }
+
+export const who_cares = (changes, subscriptions): [{changed_key: string, fns: any[], new_val: any, watched_key: string}] => {
+    return reduce((acc,val)=>{
+      const changed_key = val
+      const new_val = changes[changed_key]
+      const relevant_subscription_keys = keys(subscriptions).filter(key => startsWith(key)(changed_key))
+      return concat(
+        relevant_subscription_keys.map(watched_key => {
+          const fns = subscriptions[watched_key]
+          return {watched_key,changed_key,new_val,fns}
+        }), 
+        acc
+      )
+  
+    },[])(keys(changes))
+      
+  }
 
 // like pathOr but doesnt return null when value is null and not undefined
 export const strict_path_or = (default_val, val_path, obj) => {

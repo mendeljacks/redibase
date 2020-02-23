@@ -5,7 +5,7 @@ require('dotenv').config()
 
 const sample_data = {
     people: [{ name: 'john', settings: { mode: 1, likes_spam_email: false } }, { name: 'sandy', mood: 'unknown' }],
-    animals: [{ name: 'cow', age: 2 }, { name: 'sheep', age: 8.2, favorite_color: null }, {name: 'donkey', age: 1}]
+    animals: [{ name: 'cow', age: 2 }, { name: 'sheep', age: 8.2, favorite_color: null }, { name: 'donkey', age: 1 }]
 }
 
 const redibase = connect(process.env.redis)
@@ -55,9 +55,10 @@ test('Can store naughty strings and different types as values', async () => {
         expect(r2).toEqual(value)
     }
     const values_to_try = [
+       // NaN, -0, [], {},
         true, false,
         null, undefined,
-        1, -1, 0, 1.11, Infinity, -Infinity, // NaN, -0, [], {}
+        1, -1, 0, 1.11, Infinity, -Infinity,
         'throw new Error("oops")',
         '/', '.', '-', '=', '_',
         'object', 'function', 'string', ...blns
@@ -96,9 +97,29 @@ test('can stringify and parse', () => {
     expect(parse(stringify(undefined))).toEqual(undefined)
 })
 
-test('Should handle objects with funny key names', async () => {
+test.skip('Should handle objects with funny key names', async () => {
+
     const r1 = await redibase.set('key1', { 'not.ok': 'mate' })
+    expect(r1).toEqual('error')
     const r2 = await redibase.set('key1', { 2: 'mate' })
+    expect(r2).toEqual('error')
     const r3 = await redibase.set('key1', { 'p_p': undefined })
     const r4 = await redibase.set('key1', { 'p_p': [] })
+    const r5 = await redibase.delete('key1')
+
+})
+
+test.only('Should pubsub to changes', async (done) => {
+    await redibase.on('weather', (new_val) => {
+        const new_weather = new_val - 1
+        console.log('setting weather to', new_weather)
+        redibase.set('weather', new_weather)
+        if (new_weather === 0) {
+            console.log('welcome to canada')
+            done()
+        }        
+    })
+    const initial_weather = 35
+    await redibase.set('weather', initial_weather)
+
 })
