@@ -1,4 +1,4 @@
-import { adjust, assocPath, chain, compose, concat, curry, fromPairs, is, keys, map, pathOr, reduce, split, test, toPairs, type, uniq, unnest, join, reject, isEmpty, hasPath, path } from "ramda";
+import { adjust,  assocPath, chain, compose, concat, curry, fromPairs, hasPath, isEmpty, join, keys, map, path, reduce, reject, split, test, toPairs, type, uniq, unnest } from "ramda";
 var serialize = require('serialize-javascript')
 
 export const is_array = el => type(el) === 'Array'
