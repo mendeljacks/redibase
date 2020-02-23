@@ -25,19 +25,6 @@ export const redis_delete = async (key_list: string[], client: any): Promise<any
         })
     })
 
-    // const results = await Promise.all(key_list.map(key => {
-    //     const decorated_key = concat('redibase_')(key)
-
-    //     return new Promise((resolve, reject) => {
-    //         client.del([decorated_key], (err, res) => {
-    //             if (err) {
-    //                 return reject(err)
-    //             }
-    //             resolve(res)
-    //         })
-    //     })
-    // }))
-
     return results
 }
 
