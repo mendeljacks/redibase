@@ -1,8 +1,8 @@
-import { compose, difference, equals, filter, head, intersection, keys, last, map, pathOr, pickAll, reject, toPairs, unnest, zipObj, dropLast, slice, all, mergeAll } from "ramda";
-import { is_array, pairs_to_json, path_to_key, is_numeric_string, key_to_path, merge_keys } from "./pure";
+import { all, compose, difference, equals, filter, head, intersection, keys, last, map, pathOr, pickAll, reject, slice, toPairs, unnest, zipObj } from "ramda";
+import { is_array, pairs_to_json, path_to_key, is_numeric_string } from "./pure";
 import { redis_delete, redis_get, redis_set } from "./redis";
 
-const nested_get = async (path: [string | number], client, {include_index_keys, max_layers}) => {
+const nested_get = async (path: [string | number], client, { include_index_keys, max_layers }) => {
     return get_pairs([path_to_key(path)], {}, client, include_index_keys, 0, max_layers)
 }
 
@@ -27,27 +27,29 @@ const get_pairs = async (key_list, output, client, include_index_keys, current_l
 }
 
 export const user_get = async (path, client) => {
-    const pairs = await nested_get(path, client, {include_index_keys: false, max_layers: -1})
+    const pairs = await nested_get(path, client, { include_index_keys: false, max_layers: -1 })
     const json_obj = compose(pairs_to_json)(pairs)
-    const output = equals(path, [""]) ? json_obj :pathOr(undefined, path)(json_obj)
+    const output = equals(path, [""]) ? json_obj : pathOr(undefined, path)(json_obj)
     return output
 }
 export const user_delete = async (path, client) => {
-    if (!equals(path, [""])) {
-        const one_layer_up = await nested_get(slice(0,-1)(path), client, {include_index_keys: true, max_layers: 1})
-        
-
-        
-        if (all(is_numeric_string)(one_layer_up)) {
-            // fill_holes
-            // debugger
-        } else {
-            // remove the one key from the index
-            // debugger
-        }
-    }
-    const pairs = await nested_get(path, client, {include_index_keys: true, max_layers: -1})
+    const pairs = await nested_get(path, client, { include_index_keys: true, max_layers: -1 })
     await redis_delete(keys(pairs), client)
+    if (!equals(path, [""])) {
+        const one_layer_up = await nested_get(slice(0, -1)(path), client, { include_index_keys: true, max_layers: 1 })
+
+        // if (all(is_numeric_string)(one_layer_up)) { // fill_holes // debugger   }
+
+        // remove the one key from the index
+        const last_el = last(path)
+        const second_to_last_el = last(slice(0, -1)(path))
+        const old_index = prop(second_to_last_el)(one_layer_up)
+        const new_index = without(toString(last_el))(old_index)
+        const key_to_update = path_to_key(slice(0, -1)(path))
+        const update_obj = { [key_to_update]: new_index }
+        await redis_set(update_obj, client)
+
+    }
 }
 
 export const user_set = async (path, given_child_pairs, client) => {
@@ -79,3 +81,6 @@ export const user_set = async (path, given_child_pairs, client) => {
     }
 
 }
+ 
+
+
