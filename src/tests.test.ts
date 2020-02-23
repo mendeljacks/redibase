@@ -3,6 +3,11 @@ import { parse, stringify } from './pure'
 const blns = require('blns')
 require('dotenv').config()
 
+const sample_data = {
+    people: [{ name: 'john', settings: { mode: 1, likes_spam_email: false } }, { name: 'sandy', mood: 'unknown' }],
+    animals: [{ name: 'cow', age: 2 }, { name: 'sheep', age: 8.2, favorite_color: null }, {name: 'donkey', age: 1}]
+}
+
 const redibase = connect(process.env.redis)
 
 beforeAll(async () => {
@@ -13,11 +18,7 @@ afterAll(async () => {
     await redibase.quit()
 })
 
-test.skip('Indices are properly merged', async () => {
-    const sample_data = {
-        people: [{ name: 'john', settings: { mode: 1, likes_spam_email: false } }, { name: 'sandy', mood: 'unknown' }],
-        animals: [{ name: 'cow', age: 2 }, { name: 'sheep', age: 8.2, favorite_color: null }, {name: 'donkey', age: 1}]
-    }
+test('Indices are properly merged', async () => {
     const sample_addition = { name: 'chicken', age: 3.14 }
 
     const r1 = await redibase.set('', sample_data)
@@ -27,10 +28,6 @@ test.skip('Indices are properly merged', async () => {
 })
 
 test('Can store and retrieve json', async () => {
-    const sample_data = {
-        people: [{ name: 'john', settings: { mode: 1, likes_spam_email: false } }, { name: 'sandy', mood: 'unknown' }],
-        animals: [{ name: 'cow', age: 2 }, { name: 'sheep', age: 8.2, favorite_color: null }, {name: 'donkey', age: 1}]
-    }
     const r1 = await redibase.set('', sample_data)
     const r2 = await redibase.get('people.0.name')
     expect(r2).toEqual('john')
@@ -48,7 +45,7 @@ test('Can store and retrieve json', async () => {
 
     const r7 = await redibase.delete('animals.0')
     const r8 = await redibase.get('animals.0')
-    expect(r8).toEqual([{ name: 'sheep', age: 8.2, favorite_color: 'white' }])
+    expect(r8).toEqual(undefined)
 })
 
 test.skip('Can store naughty strings and different types as values', async () => {
@@ -78,6 +75,12 @@ test.skip('if no key return undefined', async () => {
     const get_response = await redibase.get('key1')
     expect(get_response).toEqual(undefined)
 
+})
+test('can set on the root layer', async () => {
+    const r1 = await redibase.set('', sample_data)
+    const r2 = await redibase.set('animals', { likes_chicken: true })
+    const r3 = await redibase.get('')
+    expect(r3).toEqual({ ...sample_data, animals: { likes_chicken: true } })
 })
 test.todo('should dissallow functions and regex as payload values')
 test.todo('should dissallow payload keys that are invalid or contain .,/numbers etc...')

@@ -1,4 +1,4 @@
-import { adjust, assocPath, chain, compose, concat, curry, fromPairs, hasPath, isEmpty, join, assoc, keys, map, path, reduce, reject, split, test, toPairs, type, uniq, unnest } from "ramda";
+import { isNil, dropLast, without, last, mergeAll, adjust, assocPath, chain, compose, concat, curry, fromPairs, hasPath, isEmpty, join, assoc, keys, map, path, reduce, reject, split, test, toPairs, type, uniq, unnest, toString } from "ramda";
 var serialize = require('serialize-javascript')
 
 export const is_array = el => type(el) === 'Array'
@@ -25,14 +25,14 @@ export const merge_keys = (existing_pairs, new_pairs, keys) => reduce((acc, val)
         const merged_value = concat_if_nonexistent(existing_value, new_value)
         return assoc(val, merged_value, acc)
     }
-  }, new_pairs)(keys)
+}, new_pairs)(keys)
 
 const json_to_path_list = (val) => {
     if (Array.isArray(val)) {
         const child_paths = unnest(val.map((child, i) =>
             json_to_path_list(child).map(path => [i, ...path])
         ))
-         
+
         return concat([[]], child_paths)
     }
 
@@ -65,8 +65,8 @@ export const json_to_pairs = (json) => {
     return reduce((acc, val) => {
         const redis_key = path_to_key(val)
         const given_value = strict_path_or(undefined, val, json)
-        const redis_value = is_array_or_object(given_value) ? keys(given_value) : given_value 
-        return { ...acc, [redis_key]: redis_value}
+        const redis_value = is_array_or_object(given_value) ? keys(given_value) : given_value
+        return { ...acc, [redis_key]: redis_value }
     }, {})(path_list)
 }
 
@@ -83,3 +83,16 @@ export const concat_with_dot = curry((a, b) => compose(
     join('.'),
     reject(isEmpty)
 )([a, b]))
+
+export const delete_parent_indices = (missing_paths, data) => {
+    // return data without parent indices of delete keys
+    const output = map(path => {
+        const old_index = data[path_to_key(dropLast(1, path))]
+        if (isNil(old_index)) return {}
+        const new_index = without(toString(last(path)))(old_index)
+        const key_to_update = path_to_key(dropLast(1, path))
+        const update_obj = { [key_to_update]: new_index }
+        return update_obj
+    })(missing_paths)
+    return { ...data, ...mergeAll(output) }
+}

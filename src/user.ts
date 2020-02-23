@@ -1,5 +1,5 @@
-import { all, compose, difference, equals, filter, head, intersection, keys, last, map, pathOr, pickAll, reject, slice, toPairs, unnest, zipObj, mergeAll, prop, without, toString } from "ramda";
-import { is_array, pairs_to_json, path_to_key, is_numeric_string, merge_keys } from "./pure";
+import { dropLast, isNil, all, compose, difference, equals, filter, head, intersection, keys, last, map, pathOr, pickAll, reject, slice, toPairs, unnest, zipObj, mergeAll, prop, without, toString } from "ramda";
+import { is_array, pairs_to_json, path_to_key, is_numeric_string, merge_keys, delete_parent_indices, key_to_path } from "./pure";
 import { redis_delete, redis_get, redis_set } from "./redis";
 
 const nested_get = async (path: [string | number], client, { include_index_keys, max_layers }) => {
@@ -41,14 +41,15 @@ export const user_delete = async (path, client) => {
         // if (all(is_numeric_string)(one_layer_up)) { // fill_holes // debugger   }
 
         // remove the one key from the index
-        const last_el = last(path)
-        const second_to_last_el = last(slice(0, -1)(path))
-        const old_index = prop(second_to_last_el)(one_layer_up)
-        const new_index = without(toString(last_el))(old_index)
-        const key_to_update = path_to_key(slice(0, -1)(path))
-        const update_obj = { [key_to_update]: new_index }
-        await redis_set(update_obj, client)
-
+        if (!isNil(one_layer_up)) {
+            const last_el = last(path)
+            const second_to_last_el = path.length === 1 ? '' : last(dropLast(1, path))
+            const old_index = prop(second_to_last_el)(one_layer_up)
+            const new_index = without(toString(last_el))(old_index)
+            const key_to_update = path_to_key(slice(0, -1)(path))
+            const update_obj = { [key_to_update]: new_index }
+            await redis_set(update_obj, client)
+        }
     }
 }
 
@@ -73,9 +74,10 @@ export const user_set = async (path, given_child_pairs, client) => {
     const updated_keys = intersection(keys(existing_pairs), keys(given_pairs))
     const updated_keys_changed = reject(updated_key => equals(existing_pairs[updated_key], given_pairs[updated_key]))(updated_keys)
     const merged_given_pairs = merge_keys(existing_pairs, given_pairs, updated_keys_changed)
+    const without_parent_indices = delete_parent_indices(missing_keys.map(key_to_path), merged_given_pairs)
 
     await redis_delete(missing_keys, client)
-    const set_obj = pickAll([...new_keys, ...updated_keys_changed])(merged_given_pairs)
+    const set_obj = pickAll([...new_keys, ...updated_keys_changed])(without_parent_indices)
     if (keys(set_obj).length > 0) {
         await redis_set(set_obj, client)
     }
