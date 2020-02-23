@@ -13,16 +13,16 @@ npm i redibase  // Or yarn add redibase
 ## Initialise a redis connection
 Parameters are passed directly to the redis constructor
 ```js
-import {connect} from 'redibase'
+import { connect } from 'redibase'
 const redibase = connect('redis://....')
 export redibase
 ```
 ## Modify data
 Paths can be given as arrays or strings with dots
 ```js
-redibase.set('people', [{name: 'john', age: 29},{name: 'sandy', age: 26}])) 
-redibase.set(['people',0,'age'], 30)
-redibase.set(['people.0.age'], 31)
+redibase.set('people', [{name: 'john', age: 29}, {name: 'sandy', age: 26}])) 
+redibase.set(['people', 0, 'age'], 30)
+redibase.set('people.0.age', 31)
 ```
 You can hold references to portions of the json
 ```js
@@ -33,7 +33,7 @@ set_sandys_age(28)
 ## Retrieve data
 ```js
 redibase.get('people.0')
-redibase.get(['people',0])
+redibase.get(['people', 0])
 ```
 ## Delete data
 ```js
