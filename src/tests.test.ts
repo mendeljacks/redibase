@@ -109,16 +109,16 @@ test('Should handle objects with funny key names', async () => {
 })
 
 test.only('Should pubsub to changes', async (done) => {
-    await redibase.on('weather', (new_val) => {      
+    await redibase.on('weather', async (new_val) => {      
         const new_weather = new_val - 1
         console.log('setting weather to', new_weather)
-        redibase.set('weather', new_weather)
-        if (new_weather === 0) {
+        if (new_val === 0) {
             console.log('welcome to canada')
             done()
-        }        
+        } else if (new_val > 0) {
+            redibase.set('weather', new_weather)
+        }
     })
     const initial_weather = 35
     await redibase.set('weather', initial_weather)
-
 })
