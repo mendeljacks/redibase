@@ -29,6 +29,10 @@
       "email": "danielchaimjacks@gmail.com"
     }
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mendeljacks/redibase.git"
+  },
   "license": "MIT",
   "keywords": [
     "redis",

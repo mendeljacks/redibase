@@ -27,10 +27,10 @@ const connect = (connection_args) => {
             const user_pairs = json_to_pairs(json)
             return user_set(key_to_path(path), map_keys(concat_with_dot(path_to_key(path)))(user_pairs), client)
         }),
-        delete: (key: string | any[]) => {
+        delete: async (key: string | any[]) => {
             const { error } = key_or_path_schema.validate(key);
             if (error) return Promise.reject(error)
-            user_delete(key_to_path(key), client)
+            await user_delete(key_to_path(key), client)
         },
         quit: () => client.quit(),
         on: (path: string | any[], cb) => { },
