@@ -45,7 +45,7 @@ export const user_delete = async (path, client) => {
             const last_el = last(path)
             const second_to_last_el = path.length === 1 ? '' : last(dropLast(1, path))
             const old_index = prop(second_to_last_el)(one_layer_up)
-            const new_index = without(toString(last_el))(old_index)
+            const new_index = without(toString(last_el))(old_index || [])
             const key_to_update = path_to_key(slice(0, -1)(path))
             const update_obj = { [key_to_update]: new_index }
             await redis_set(update_obj, client)

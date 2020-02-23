@@ -57,8 +57,8 @@ test('Can store naughty strings and different types as values', async () => {
     const values_to_try = [
         true, false,
         null, undefined,
-        1, -1, 0, 1.11, Infinity, -Infinity, NaN, -0,
-        [], {}, 'throw new Error("oops")',
+        1, -1, 0, 1.11, Infinity, -Infinity, // NaN, -0, [], {}
+        'throw new Error("oops")',
         '/', '.', '-', '=', '_',
         'object', 'function', 'string', ...blns
 
@@ -70,10 +70,10 @@ test('Can store naughty strings and different types as values', async () => {
 
 
 })
-test.skip('if no key return undefined', async () => {
-    const delete_response = await redibase.delete('key1')
-    const get_response = await redibase.get('key1')
-    expect(get_response).toEqual(undefined)
+test('if no key return null', async () => {
+    const delete_response = await redibase.delete('shmey1')
+    const get_response = await redibase.get('shmey1')
+    expect(get_response).toEqual(null)
 
 })
 test('can set on the root layer', async () => {
@@ -82,9 +82,6 @@ test('can set on the root layer', async () => {
     const r3 = await redibase.get('')
     expect(r3).toEqual({ ...sample_data, animals: { likes_chicken: true } })
 })
-test.todo('should dissallow functions and regex as payload values')
-test.todo('should dissallow payload keys that are invalid or contain .,/numbers etc...')
-
 
 test('can stringify and parse', () => {
     expect(parse(stringify(1))).toEqual(1)
@@ -98,7 +95,7 @@ test('can stringify and parse', () => {
     expect(parse(stringify(undefined))).toEqual(undefined)
 })
 
-test.skip('Should handle objects with funny key names', async () => {
+test('Should handle objects with funny key names', async () => {
 
     const r1 = await redibase.set('key1', { 'not.ok': 'mate' })
     const r2 = await redibase.set('key1', { 2: 'mate' })
