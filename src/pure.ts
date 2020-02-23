@@ -16,8 +16,8 @@ export const concat_if_nonexistent = (array, append_array) => compose(uniq, conc
 
 // returns new_pairs with all the index values from existing_pairs merged in
 export const merge_keys = (existing_pairs, new_pairs, keys) => reduce((acc, val) => {
-    const existing_value = existing_pairs[val] || []
-    const new_value = new_pairs[val] || []
+    const existing_value = existing_pairs[val]
+    const new_value = new_pairs[val]
 
     if (!Array.isArray(existing_value) || !Array.isArray(new_value)) {
         return assoc(val, new_value, acc)
@@ -91,7 +91,7 @@ export const delete_parent_indices = (missing_paths, data) => {
         if (isNil(old_index)) return acc
         const new_index = without(toString(last(val)))(old_index)
         const key_to_update = path_to_key(dropLast(1, val))
-        const update_obj = { [key_to_update]: new_index }
+        const update_obj = { ...acc, [key_to_update]: new_index }
         return update_obj
     }, data, missing_paths)
 
