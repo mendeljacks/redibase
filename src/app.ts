@@ -20,8 +20,8 @@ const connect = (connection_args) => {
             return user_get(key_to_path(key), client)
         },
         set: curry((path: string | any [], json) => {
-            const { path_error } = key_or_path_schema.validate(path)
-            const { json_error } = allowable_value_schema.validate(json)
+            const { error: path_error } = key_or_path_schema.validate(path)
+            const { error: json_error } = allowable_value_schema.validate(json)
             if (path_error) return Promise.reject(path_error)
             if (json_error) return Promise.reject(json_error)
             const user_pairs = json_to_pairs(json)

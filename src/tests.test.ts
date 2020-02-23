@@ -70,6 +70,7 @@ test('Can store naughty strings and different types as values', async () => {
 
 
 })
+
 test('if no key return null', async () => {
     const delete_response = await redibase.delete('shmey1')
     const get_response = await redibase.get('shmey1')
@@ -96,10 +97,8 @@ test('can stringify and parse', () => {
 })
 
 test('Should handle objects with funny key names', async () => {
-
     const r1 = await redibase.set('key1', { 'not.ok': 'mate' })
     const r2 = await redibase.set('key1', { 2: 'mate' })
     const r3 = await redibase.set('key1', { 'p_p': undefined })
     const r4 = await redibase.set('key1', { 'p_p': [] })
-
 })
