@@ -54,15 +54,13 @@ export const user_delete = async (path, client) => {
 }
 
 export const user_set = async (path, given_child_pairs, client) => {
-    const parent_keys = path.length > 1 
-        ? path.map((el, i) => slice(0, i, path)).map(path_to_key)
-        : []
+    const parent_keys = path.length > 1 ? path.map((el, i) => slice(0, i, path)).map(path_to_key) : []
 
-    const existing_child_pairs = await nested_get(path, client, {include_index_keys: true, max_layers: -1})
-    const existing_parent_pairs = parent_keys.length > 0 
-        ? await get_pairs(parent_keys, {}, client, true, 0, 1) 
-        : {}
-    const existing_pairs = { ...existing_parent_pairs, ...existing_child_pairs}
+    const [existing_child_pairs, existing_parent_pairs] = await Promise.all([
+        nested_get(path, client, { include_index_keys: true, max_layers: -1 }),
+        parent_keys.length > 0 ? get_pairs(parent_keys, {}, client, true, 0, 1) : Promise.resolve({})
+    ])
+    const existing_pairs = { ...existing_parent_pairs, ...existing_child_pairs }
 
     const given_parent_pairs = mergeAll(parent_keys.map((key, i) => ({
         [key]: [path[i].toString()]
@@ -76,13 +74,12 @@ export const user_set = async (path, given_child_pairs, client) => {
     const merged_given_pairs = merge_keys(existing_pairs, given_pairs, updated_keys_changed)
     const without_parent_indices = delete_parent_indices(missing_keys.map(key_to_path), merged_given_pairs)
 
+    const set_obj = pickAll([...new_keys, ...updated_keys_changed])({...merged_given_pairs, ...without_parent_indices})
+
     await redis_delete(missing_keys, client)
-    const set_obj = pickAll([...new_keys, ...updated_keys_changed])(without_parent_indices)
-    if (keys(set_obj).length > 0) {
-        await redis_set(set_obj, client)
-    }
+    await redis_set(set_obj, client)
 
 }
- 
+
 
 

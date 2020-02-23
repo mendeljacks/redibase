@@ -10,7 +10,7 @@ const sample_data = {
 
 const redibase = connect(process.env.redis)
 
-beforeAll(async () => {
+beforeEach(async () => {
     await redibase.delete('')
 })
 
