@@ -48,22 +48,23 @@ const json_to_path_list = (val) => {
     return [[]]
 }
 
-export const who_cares = (changes, subscriptions): [{changed_key: string, fns: any[], new_val: any, watched_key: string}] => {
-    return reduce((acc,val)=>{
-      const changed_key = val
-      const new_val = changes[changed_key]
-      const relevant_subscription_keys = keys(subscriptions).filter(key => startsWith(key)(changed_key))
-      return concat(
-        relevant_subscription_keys.map(watched_key => {
-          const fns = subscriptions[watched_key]
-          return {watched_key,changed_key,new_val,fns}
-        }), 
-        acc
-      )
-  
-    },[])(keys(changes))
-      
-  }
+export const who_cares = (changes, subscriptions): [{ changed_key: string, fns: any[], new_val: any, old_val: any, watched_key: string }] => {
+    return reduce((acc, val) => {
+        const changed_key = val
+        const new_val = changes.new_pairs[changed_key]
+        const old_val = changes.old_pairs[changed_key]
+        const relevant_subscription_keys = keys(subscriptions).filter(key => startsWith(key)(changed_key))
+        return concat(
+            relevant_subscription_keys.map(watched_key => {
+                const fns = subscriptions[watched_key]
+                return { watched_key, changed_key, new_val, old_val, fns }
+            }),
+            acc
+        )
+
+    }, [])(keys(changes.old_pairs))
+
+}
 
 // like pathOr but doesnt return null when value is null and not undefined
 export const strict_path_or = (default_val, val_path, obj) => {

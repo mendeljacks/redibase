@@ -41,7 +41,9 @@ const connect = (connection_args) => {
             await user_delete(key_to_path(key), client)
         },
         quit: () => client.quit(),
-        on: (path: string | any[], cb) => { subscriptions[path_to_key(path)] = concat(subscriptions[path_to_key(path)] || [], [cb]) },
+        on: (path: string | any[], cb) => { 
+            subscriptions[path_to_key(path)] = concat(subscriptions[path_to_key(path)] || [], [cb]) 
+        },
         client
     }
 }
