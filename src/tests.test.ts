@@ -12,7 +12,21 @@ beforeAll(async () => {
 afterAll(async () => {
     redibase.quit()
 })
-test('Can store and retrieve json', async () => {
+
+test('Indices are properly merged', async () => {
+    const sample_data = {
+        people: [{ name: 'john', settings: { mode: 1, likes_spam_email: false } }, { name: 'sandy', mood: 'unknown' }],
+        animals: [{ name: 'cow', age: 2 }, { name: 'sheep', age: 8.2, favorite_color: null }, {name: 'donkey', age: 1}]
+    }
+    const sample_addition = { name: 'chicken', age: 3.14 }
+
+    const r1 = await redibase.set('', sample_data)
+    const r2 = await redibase.set('animals.3', sample_addition)
+    const r3 = await redibase.get('')
+    expect(r3.animals[3]).toEqual(sample_addition)
+})
+
+test.skip('Can store and retrieve json', async () => {
     const sample_data = {
         people: [{ name: 'john', settings: { mode: 1, likes_spam_email: false } }, { name: 'sandy', mood: 'unknown' }],
         animals: [{ name: 'cow', age: 2 }, { name: 'sheep', age: 8.2, favorite_color: null }, {name: 'donkey', age: 1}]

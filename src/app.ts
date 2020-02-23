@@ -32,7 +32,8 @@ const connect = (connection_args) => {
             user_delete(key_to_path(key), client)
         },
         quit: () => client.quit(),
-        on: (path: string | any[], cb) => { }
+        on: (path: string | any[], cb) => { },
+        client
     }
 }
 export { connect }

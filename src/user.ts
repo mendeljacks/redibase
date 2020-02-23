@@ -1,5 +1,5 @@
-import { all, compose, difference, equals, filter, head, intersection, keys, last, map, pathOr, pickAll, reject, slice, toPairs, unnest, zipObj } from "ramda";
-import { is_array, pairs_to_json, path_to_key, is_numeric_string } from "./pure";
+import { compose, difference, equals, filter, head, intersection, keys, last, map, pathOr, pickAll, reject, toPairs, unnest, zipObj, dropLast, slice, all, mergeAll } from "ramda";
+import { is_array, pairs_to_json, path_to_key, is_numeric_string, key_to_path, merge_keys } from "./pure";
 import { redis_delete, redis_get, redis_set } from "./redis";
 
 const nested_get = async (path: [string | number], client, {include_index_keys, max_layers}) => {
@@ -50,18 +50,32 @@ export const user_delete = async (path, client) => {
     await redis_delete(keys(pairs), client)
 }
 
-export const user_set = async (path, given_pairs, client) => {
-    const existing_pairs = await nested_get(path, client, {include_index_keys: true, max_layers: -1})
+export const user_set = async (path, given_child_pairs, client) => {
+    const parent_keys = path.length > 1 
+        ? path.map((el, i) => slice(0, i, path)).map(path_to_key)
+        : []
+
+    const existing_child_pairs = await nested_get(path, client, {include_index_keys: true, max_layers: -1})
+    const existing_parent_pairs = parent_keys.length > 0 
+        ? await get_pairs(parent_keys, {}, client, true, 0, 1) 
+        : {}
+    const existing_pairs = { ...existing_parent_pairs, ...existing_child_pairs}
+
+    const given_parent_pairs = mergeAll(parent_keys.map((key, i) => ({
+        [key]: [path[i].toString()]
+    })))
+    const given_pairs = { ...given_child_pairs, ...given_parent_pairs }
+
     const new_keys = difference(keys(given_pairs), keys(existing_pairs))
     const missing_keys = difference(keys(existing_pairs), keys(given_pairs))
     const updated_keys = intersection(keys(existing_pairs), keys(given_pairs))
     const updated_keys_changed = reject(updated_key => equals(existing_pairs[updated_key], given_pairs[updated_key]))(updated_keys)
+    const merged_given_pairs = merge_keys(existing_pairs, given_pairs, updated_keys_changed)
 
     await redis_delete(missing_keys, client)
-    const set_obj = pickAll([...new_keys, ...updated_keys_changed])(given_pairs)
-    await redis_set(set_obj, client)
+    const set_obj = pickAll([...new_keys, ...updated_keys_changed])(merged_given_pairs)
+    if (keys(set_obj).length > 0) {
+        await redis_set(set_obj, client)
+    }
 
 }
- 
-
-

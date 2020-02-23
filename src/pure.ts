@@ -1,4 +1,4 @@
-import { adjust,  assocPath, chain, compose, concat, curry, fromPairs, hasPath, isEmpty, join, keys, map, path, reduce, reject, split, test, toPairs, type, uniq, unnest } from "ramda";
+import { adjust, assocPath, chain, compose, concat, curry, fromPairs, hasPath, isEmpty, join, assoc, keys, map, path, reduce, reject, split, test, toPairs, type, uniq, unnest } from "ramda";
 var serialize = require('serialize-javascript')
 
 export const is_array = el => type(el) === 'Array'
@@ -13,6 +13,19 @@ export const stringify = (value: any): string => serialize(value, { ignoreFuncti
 export const parse = (serializedJavascript: string): any => eval('(' + serializedJavascript + ')')
 
 export const concat_if_nonexistent = (array, append_array) => compose(uniq, concat(array))(append_array)
+
+// returns new_pairs with all the index values from existing_pairs merged in
+export const merge_keys = (existing_pairs, new_pairs, keys) => reduce((acc, val) => {
+    const existing_value = existing_pairs[val] || []
+    const new_value = new_pairs[val] || []
+
+    if (!Array.isArray(existing_value) || !Array.isArray(new_value)) {
+        return assoc(val, new_value, acc)
+    } else {
+        const merged_value = concat_if_nonexistent(existing_value, new_value)
+        return assoc(val, merged_value, acc)
+    }
+  }, new_pairs)(keys)
 
 const json_to_path_list = (val) => {
     if (Array.isArray(val)) {
