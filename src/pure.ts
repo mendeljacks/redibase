@@ -48,8 +48,8 @@ const json_to_path_list = (val) => {
     return [[]]
 }
 
-// like pathOr but doesnt return default when the value is null
-const strict_path_or = (default_val, val_path, obj) => {
+// like pathOr but doesnt return null when value is null and not undefined
+export const strict_path_or = (default_val, val_path, obj) => {
     if (val_path.length === 0) {
         return obj
     }

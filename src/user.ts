@@ -1,5 +1,5 @@
-import { dropLast, isNil, all, compose, difference, equals, filter, head, intersection, keys, last, map, pathOr, pickAll, reject, slice, toPairs, unnest, zipObj, mergeAll, prop, without, toString } from "ramda";
-import { is_array, pairs_to_json, path_to_key, is_numeric_string, merge_keys, delete_parent_indices, key_to_path } from "./pure";
+import { compose, difference, dropLast, equals, filter, head, intersection, isNil, keys, last, map, mergeAll, pickAll, prop, reject, slice, toPairs, toString, unnest, without, zipObj } from "ramda";
+import { delete_parent_indices, is_array, key_to_path, merge_keys, pairs_to_json, path_to_key, strict_path_or } from "./pure";
 import { redis_delete, redis_get, redis_set } from "./redis";
 
 const nested_get = async (path: [string | number], client, { include_index_keys, max_layers }) => {
@@ -29,7 +29,7 @@ const get_pairs = async (key_list, output, client, include_index_keys, current_l
 export const user_get = async (path, client) => {
     const pairs = await nested_get(path, client, { include_index_keys: false, max_layers: -1 })
     const json_obj = compose(pairs_to_json)(pairs)
-    const output = equals(path, [""]) ? json_obj : pathOr(undefined, path)(json_obj)
+    const output = equals(path, [""]) ? json_obj : strict_path_or(undefined, path, json_obj)
     return output
 }
 export const user_delete = async (path, client) => {
@@ -74,7 +74,7 @@ export const user_set = async (path, given_child_pairs, client) => {
     const merged_given_pairs = merge_keys(existing_pairs, given_pairs, updated_keys_changed)
     const without_parent_indices = delete_parent_indices(missing_keys.map(key_to_path), merged_given_pairs)
 
-    const set_obj = pickAll([...new_keys, ...updated_keys_changed])({...merged_given_pairs, ...without_parent_indices})
+    const set_obj = pickAll([...new_keys, ...updated_keys_changed])({ ...merged_given_pairs, ...without_parent_indices })
 
     await redis_delete(missing_keys, client)
     await redis_set(set_obj, client)

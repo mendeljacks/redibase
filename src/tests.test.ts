@@ -45,7 +45,7 @@ test('Can store and retrieve json', async () => {
 
     const r7 = await redibase.delete('animals.0')
     const r8 = await redibase.get('animals.0')
-    expect(r8).toEqual(undefined)
+    expect(r8).toEqual(null)
 })
 
 test('Can store naughty strings and different types as values', async () => {
@@ -57,7 +57,7 @@ test('Can store naughty strings and different types as values', async () => {
     const values_to_try = [
         true, false,
         null, undefined,
-        1, -1, 0, 1.11, -0, Infinity, -Infinity, NaN,
+        1, -1, 0, 1.11, Infinity, -Infinity, NaN, -0,
         [], {}, 'throw new Error("oops")',
         '/', '.', '-', '=', '_',
         'object', 'function', 'string', ...blns
