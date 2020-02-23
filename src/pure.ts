@@ -1,4 +1,4 @@
-import { isNil, dropLast, without, last, mergeAll, adjust, assocPath, chain, compose, concat, curry, fromPairs, hasPath, isEmpty, join, assoc, keys, map, path, reduce, reject, split, test, toPairs, type, uniq, unnest, toString } from "ramda";
+import { adjust, assoc, assocPath, chain, compose, concat, curry, dropLast, fromPairs, hasPath, isEmpty, isNil, join, keys, last, map, path, reduce, reject, split, test, toPairs, toString, type, uniq, unnest, without } from "ramda";
 var serialize = require('serialize-javascript')
 
 export const is_array = el => type(el) === 'Array'
@@ -85,14 +85,15 @@ export const concat_with_dot = curry((a, b) => compose(
 )([a, b]))
 
 export const delete_parent_indices = (missing_paths, data) => {
-    // return data without parent indices of delete keys
-    const output = map(path => {
-        const old_index = data[path_to_key(dropLast(1, path))]
-        if (isNil(old_index)) return {}
-        const new_index = without(toString(last(path)))(old_index)
-        const key_to_update = path_to_key(dropLast(1, path))
+
+    const output = reduce((acc, val) => {
+        const old_index = acc[path_to_key(dropLast(1, val))]
+        if (isNil(old_index)) return acc
+        const new_index = without(toString(last(val)))(old_index)
+        const key_to_update = path_to_key(dropLast(1, val))
         const update_obj = { [key_to_update]: new_index }
         return update_obj
-    })(missing_paths)
-    return { ...data, ...mergeAll(output) }
+    }, data, missing_paths)
+
+    return output
 }

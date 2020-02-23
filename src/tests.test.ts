@@ -48,7 +48,7 @@ test('Can store and retrieve json', async () => {
     expect(r8).toEqual(undefined)
 })
 
-test.skip('Can store naughty strings and different types as values', async () => {
+test('Can store naughty strings and different types as values', async () => {
     const store_and_retrieve = async (path, value) => {
         const r1 = await redibase.set(path, value)
         const r2 = await redibase.get(path)
@@ -92,6 +92,7 @@ test('can stringify and parse', () => {
     expect(parse(stringify([1, 2, 'test.0']))).toEqual([1, 2, 'test.0'])
     expect(parse(stringify(Infinity))).toEqual(Infinity)
     expect(parse(stringify(false))).toEqual(false)
+    expect(parse(stringify(true))).toEqual(true)
     expect(parse(stringify(null))).toEqual(null)
     expect(parse(stringify('null'))).toEqual('null')
     expect(parse(stringify(undefined))).toEqual(undefined)
