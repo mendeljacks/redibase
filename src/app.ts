@@ -16,7 +16,6 @@ const connect = (connection_args) => {
         todo_list.map(task => {
             task.fns.map(fn => fn(task.old_val, task.new_val))
         })
-        // console.log('received message on changes channel changes:', changes )
     })
 
 
