@@ -54,7 +54,7 @@ export const user_delete = async (path, client) => {
 }
 
 export const user_set = async (path, given_child_pairs, client) => {
-    const parent_keys = path.length > 0 ? path.map((el, i) => slice(0, i, path)).map(path_to_key) : []
+    const parent_keys = path.length > 0 && !equals(path, ['']) ? path.map((el, i) => slice(0, i, path)).map(path_to_key) : []
 
     const [existing_child_pairs, existing_parent_pairs] = await Promise.all([
         nested_get(path, client, { include_index_keys: true, max_layers: -1 }),
