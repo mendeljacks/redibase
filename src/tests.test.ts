@@ -108,8 +108,8 @@ test('Should handle objects with funny key names', async () => {
     expect(r4).toEqual(undefined)
 })
 
-test.only('Should pubsub to changes', async (done) => {
-    await redibase.on('weather', async (new_val) => {      
+test('Should pubsub to changes', async (done) => {
+    await redibase.on('weather', async (old_val, new_val) => {      
         const new_weather = new_val - 1
         console.log('setting weather to', new_weather)
         if (new_val === 0) {

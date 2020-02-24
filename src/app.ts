@@ -14,9 +14,9 @@ const connect = (connection_args) => {
         const changes = parse(message)
         const todo_list = who_cares(changes, subscriptions)
         todo_list.map(task => {
-            task.fns.map(fn => fn(task.new_val))
+            task.fns.map(fn => fn(task.old_val, task.new_val))
         })
-        console.log('received message on changes channel changes:', changes )
+        // console.log('received message on changes channel changes:', changes )
     })
 
 
