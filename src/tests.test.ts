@@ -122,3 +122,23 @@ test('Should pubsub to changes', async (done) => {
     const initial_weather = 35
     await redibase.set('weather', initial_weather)
 })
+
+test('delete deletes key indices right away', async (done) => {
+    await redibase.set('', { people: { are: { here: true }}})
+    redibase.on('', async () => {
+        const r1 = await redibase.get('people')
+        expect(Object.keys(r1).length).toEqual(0)
+        done()
+    })
+    await redibase.delete('people.are')
+})
+
+test('delete deletes key indices right away', async (done) => {
+    await redibase.set('', { people: ['john', 'mary', 'edward']})
+    redibase.on('', async () => {
+        const r1 = await redibase.get('')
+        expect(Object.keys(r1).length).toEqual(0)
+        done()
+    })
+    await redibase.delete('')
+})
