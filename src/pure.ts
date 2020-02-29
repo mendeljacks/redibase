@@ -115,3 +115,35 @@ export const delete_parent_indices = (missing_paths, data) => {
 
     return output
 }
+
+
+
+
+const sample_json = {
+    name: 'John',
+    age: 30,
+    cars: ['Ford', 'BMW', 'fiat'],
+    settings: {
+        likes_pizza: false,
+        wants_daily_emails: true
+    }
+}
+
+
+
+
+const pointers = {
+    'redibase_': ['name','age','cars','settings'],
+    'redibase_cars': [0,1,2],
+    'redibase_settings': ['likes_pizza','wants_daily_emails'],
+}
+
+const redis_entries = {
+    'redibase_age': 30,
+    'redibase_cars.0': 'Ford',
+    'redibase_cars.1': 'BMW',
+    'redibase_cars.2': 'fiat',
+    'redibase_name': 'John',
+    'redibase_settings.likes_pizza': false,
+    'redibase_settings.wants_daily_emails': true
+}

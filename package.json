@@ -2,10 +2,14 @@
   "name": "redibase",
   "version": "1.0.12",
   "description": "redibase the redis powered firebase alternative",
-  "main": "index.js",
+  "main": "build/index.js",
   "scripts": {
-    "test": "node --inspect-brk ./node_modules/jest/bin/jest.js"
+    "test": "node --inspect-brk ./node_modules/jest/bin/jest.js",
+    "build": "tsc"
   },
+  "files": [
+    "build/**/*"
+  ],
   "jest": {
     "verbose": true,
     "maxConcurrency": 1,
