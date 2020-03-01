@@ -1,6 +1,6 @@
 {
   "name": "redibase",
-  "version": "1.0.16",
+  "version": "1.0.17",
   "description": "redibase the redis powered firebase alternative",
   "main": "build/index.js",
   "scripts": {
