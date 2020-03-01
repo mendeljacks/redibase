@@ -142,3 +142,6 @@ test('delete deletes key indices right away', async (done) => {
     })
     await redibase.delete('')
 })
+
+test.todo('can unsubscribe')
+test.todo('when subprop changes whole object is sent to on fn')
