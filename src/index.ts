@@ -37,7 +37,7 @@ const connect = (connection_args) => {
         delete: async (key: string | any[]) => {
             const { error } = key_or_path_schema.validate(key);
             if (error) return Promise.reject(error)
-            await user_delete(key_to_path(key), client)
+            await user_delete(key_to_path(key), client, false)
         },
         quit: () => client.quit(),
         on: (path: string | any[], cb) => { 

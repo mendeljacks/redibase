@@ -13,7 +13,7 @@ export const allowable_value_schema = Joi.alternatives().try(
         Joi.link('...')
     ),
     Joi.any().valid(null),
-    Joi.string(),
+    Joi.string().allow(''),
     Joi.number().allow(Infinity, -Infinity),
     Joi.bool(),
     Joi.array().items(Joi.link('...'))

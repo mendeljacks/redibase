@@ -1,4 +1,4 @@
-import { adjust, any, assoc, assocPath, chain, compose, concat, curry, dropLast, filter, fromPairs, hasPath, isEmpty, isNil, join, keys, last, map, path, pickAll, reduce, reject, split, startsWith, test, toPairs, toString, type, uniq, unnest, values, without } from "ramda";
+import { adjust, any, assoc, assocPath, equals, slice, mergeAll, mergeWithKey, chain, compose, concat, curry, dropLast, filter, fromPairs, hasPath, isEmpty, isNil, join, keys, last, map, path, pickAll, reduce, reject, split, startsWith, test, toPairs, toString, type, uniq, unnest, values, without } from "ramda";
 var serialize = require('serialize-javascript')
 
 export const is_array = el => type(el) === 'Array'
@@ -28,24 +28,21 @@ export const merge_keys = (existing_pairs, new_pairs, keys) => reduce((acc, val)
 }, new_pairs)(keys)
 
 const json_to_path_list = (val) => {
-    if (Array.isArray(val)) {
+    if (is_array(val)) {
         const child_paths = unnest(val.map((child, i) =>
             json_to_path_list(child).map(path => [i, ...path])
         ))
-
-        return concat([[]], child_paths)
+        return child_paths
     }
 
     if (is_object(val)) {
-        const child_paths = compose(
-            concat([[]]),
-            chain((key, i) =>
-                json_to_path_list(val[key]).map(path => [key, ...path])
-            )
+        const child_paths = chain((key, i) =>
+            json_to_path_list(val[key]).map(path => [key, ...path])
         )(keys(val))
         return child_paths
     }
     return [[]]
+
 }
 
 export const who_cares = (changes, subscriptions): [{ changed_key: string, fns: any[], new_val: any, old_val: any, watched_key: string }] => {
@@ -116,34 +113,26 @@ export const delete_parent_indices = (missing_paths, data) => {
     return output
 }
 
+const ensure_is_array = value => is_array(value) ? value : [value]
+const parent_keys = shpath => shpath.length > 0 && !equals(shpath, ['']) ? shpath.map((el, i) => ({ [path_to_key(slice(0, i, shpath))]: key_to_path(shpath)[i] })) : []
 
+export const get_required_indexes = (key_list) => {
+    const required_indexes = reduce((acc, val) => {
+        const breakdown = compose(key_to_path)(val)
+        const pkeys = compose(mergeAll, parent_keys)(breakdown)
+        return mergeWithKey((k, l, r) => uniq(concat(ensure_is_array(l), ensure_is_array(r))))(acc, pkeys)
+    }, {})(key_list)
 
-
-const sample_json = {
-    name: 'John',
-    age: 30,
-    cars: ['Ford', 'BMW', 'fiat'],
-    settings: {
-        likes_pizza: false,
-        wants_daily_emails: true
+    const indexes_to_add_for_given_key = (key, required_indexes) => {
+        return mergeAll(required_indexes[key].map(el => ({ [el]: null })))
     }
+
+
+    const commands = map(key => ['hmset', key, indexes_to_add_for_given_key(key, required_indexes)])(keys(required_indexes))
+    return commands
 }
 
 
 
 
-const pointers = {
-    'redibase_': ['name','age','cars','settings'],
-    'redibase_cars': [0,1,2],
-    'redibase_settings': ['likes_pizza','wants_daily_emails'],
-}
 
-const redis_entries = {
-    'redibase_age': 30,
-    'redibase_cars.0': 'Ford',
-    'redibase_cars.1': 'BMW',
-    'redibase_cars.2': 'fiat',
-    'redibase_name': 'John',
-    'redibase_settings.likes_pizza': false,
-    'redibase_settings.wants_daily_emails': true
-}
