@@ -1,4 +1,4 @@
-import { adjust, any, assoc, assocPath, equals, slice, mergeAll, mergeWithKey, chain, compose, concat, curry, dropLast, filter, fromPairs, hasPath, isEmpty, isNil, join, keys, last, map, path, pickAll, reduce, reject, split, startsWith, test, toPairs, toString, type, uniq, unnest, values, without } from "ramda";
+import { adjust, any, includes, assoc, assocPath, equals, slice, mergeAll, mergeWithKey, chain, compose, concat, curry, dropLast, filter, fromPairs, hasPath, isEmpty, isNil, join, keys, last, map, path, pickAll, reduce, reject, split, startsWith, test, toPairs, toString, type, uniq, unnest, values, without } from "ramda";
 var serialize = require('serialize-javascript')
 
 export const is_array = el => type(el) === 'Array'
@@ -123,12 +123,11 @@ export const get_required_indexes = (key_list) => {
         return mergeWithKey((k, l, r) => uniq(concat(ensure_is_array(l), ensure_is_array(r))))(acc, pkeys)
     }, {})(key_list)
 
-    const indexes_to_add_for_given_key = (key, required_indexes) => {
-        return mergeAll(required_indexes[key].map(el => ({ [el]: null })))
+    const indexes_to_add_for_given_key = (key, required_indexes, key_list) => {
+        return mergeAll(required_indexes[key].map(el => ({ [el]: includes(concat_with_dot(key, el), key_list) ? 'leaf' : 'branch' })))
     }
 
-
-    const commands = map(key => ['hmset', key, indexes_to_add_for_given_key(key, required_indexes)])(keys(required_indexes))
+    const commands = map(key => ['hmset', key, indexes_to_add_for_given_key(key, required_indexes, key_list)])(keys(required_indexes))
     return commands
 }
 

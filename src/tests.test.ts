@@ -144,17 +144,17 @@ test('delete deletes key indices right away', (done) => {
     })()
 })
 
-// test('delete deletes key indices right away', (done) => {
-//     (async () => {
-//         await redibase.set('', { people: ['john', 'mary', 'edward'] })
-//         redibase.on('', async () => {
-//             const r1 = await redibase.get('')
-//             expect(Object.keys(r1).length).toEqual(0)
-//             done()
-//         })
-//         await redibase.delete('')
-//     })()
-// })
+test('delete deletes key indices right away', (done) => {
+    (async () => {
+        await redibase.set('', { people: ['john', 'mary', 'edward'] })
+        redibase.on('', async () => {
+            const r1 = await redibase.get('')
+            expect(Object.keys(r1).length).toEqual(0)
+            done()
+        })
+        await redibase.delete('')
+    })()
+})
 test.todo('values can become indexes eg my.name = "shmerel" then set my.name.last = "baker" and expect name to turn into an object')
 test.todo('can unsubscribe')
 test.todo('when subprop changes whole object is sent to on fn')
