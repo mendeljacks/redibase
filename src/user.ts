@@ -3,26 +3,34 @@ import { delete_parent_indices, is_array, key_to_path, merge_keys, pairs_to_json
 import { redis_commands } from "./redis";
 
 const nested_get = async (path: [string | number], client, { include_index_keys, max_layers }) => {
-    return get_pairs([path_to_key(path)], {}, client, include_index_keys, 0, max_layers)
+    const key = path_to_key(path)
+    const [entry_point_node_type] = await redis_commands([['type', key]], client)
+    const branch_keys = entry_point_node_type === 'hash' ? [key] : []
+    const leaf_keys = entry_point_node_type === 'hash' ? [] : [key]
+    return get_pairs(branch_keys, leaf_keys, {}, client, {include_index_keys, max_layers}, 0)
 }
 
-const get_pairs = async (key_list, output, client, include_index_keys, current_layer, max_layers) => {
+const get_pairs = async (branch_keys, leaf_keys, output, client, {include_index_keys, max_layers}, current_layer) => {
     if (current_layer === max_layers) return output
-    const [value_list] = await redis_commands([['mget', ...key_list]], client)
+        
+    const [leaf_results, branch_results] = await Promise.all([    
+        leaf_keys.length > 0 ? redis_commands([['mget', ...leaf_keys]], client) : Promise.resolve(),
+        branch_keys.length > 0 ? redis_commands(branch_keys.map(bk=>['hgetall', bk]), client) : Promise.resolve()
+    ])
 
-    const found_values = zipObj(key_list, value_list)
-    const sub_keys = compose(
-        unnest,
-        map(pair =>
-            map(index_end =>
-                head(pair) + `${head(pair) === "" ? '' : '.'}` + index_end
-            )(last(pair))),
-        toPairs,
-        filter(is_array)
-    )(found_values)
-    const new_output = { ...output, ...(include_index_keys ? found_values : reject(is_array)(found_values)) }
+    // const found_values = zipObj(key_list, value_list)
+    // const sub_keys = compose(
+    //     unnest,
+    //     map(pair =>
+    //         map(index_end =>
+    //             head(pair) + `${head(pair) === "" ? '' : '.'}` + index_end
+    //         )(last(pair))),
+    //     toPairs,
+    //     filter(is_array)
+    // )(found_values)
+    // const new_output = { ...output, ...(include_index_keys ? found_values : reject(is_array)(found_values)) }
     if (sub_keys.length === 0) return new_output
-    return get_pairs(sub_keys, new_output, client, include_index_keys, current_layer + 1, max_layers)
+    return get_pairs(next_branch_keys, next_leaf_keys, new_output, client, {include_index_keys, max_layers}, current_layer + 1)
 
 }
 

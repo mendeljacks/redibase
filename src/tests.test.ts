@@ -18,7 +18,7 @@ afterAll(async () => {
     await redibase.quit()
 })
 
-test('Indices are properly merged', async () => {
+test.only('Indices are properly merged', async () => {
     const sample_addition = { name: 'chicken', age: 3.14 }
 
     const r1 = await redibase.set('', sample_data)
