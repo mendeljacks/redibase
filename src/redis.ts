@@ -15,7 +15,7 @@ const decorate = (command: any[]) => {
             return compose(map_keys(concat('redibase_')), map(stringify))(arg)
         })
     }
-    if (includes(command[0], ['hmset', 'hdel', 'hkeys', 'type'])) {
+    if (includes(command[0], ['hmset', 'hdel', 'type'])) {
         return command.map((arg, i) => {
             if (i === 1) return concat('redibase_')(arg)
             return arg
@@ -28,7 +28,7 @@ const undecorate = (result, original_command) => {
     if (original_command === 'mget') {
         return result.map(el => isNil(el) ? el : parse(el))
     }
-    if (includes(original_command, ['type', 'hgetall'])) {
+    if (includes(original_command, ['type', 'hgetall', 'del', 'mset', 'hmset', 'hdel' ])) {
         return result
     }
     throw new Error('original command type not recognized...' + original_command)
