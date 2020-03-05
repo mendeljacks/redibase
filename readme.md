@@ -51,4 +51,5 @@ redibase.on(['people', 0, 'name'], (new_value, old_value) => console.log(old_val
 redibase.quit()
 ```
 
-
+## Limitations 
+The maximum number of nesting layers is limited by the javascript recursion depth, which is around 10000. By comparison, firebase allows 32 layers of nesting.
