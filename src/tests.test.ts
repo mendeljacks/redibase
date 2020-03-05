@@ -18,7 +18,7 @@ afterAll(async () => {
     await redibase.quit()
 })
 
-test.only('Indices are properly merged', async () => {
+test('Indices are properly merged', async () => {
     const sample_addition = { name: 'chicken', age: 3.14 }
 
     const r1 = await redibase.set('', sample_data)
@@ -117,7 +117,7 @@ test('Should handle objects with funny key names', async () => {
 
 test('Should pubsub to changes', (done) => {
     (async () => {
-        await redibase.on('weather', async (old_val, new_val) => {
+        await redibase.on('weather', async (new_val, old_val) => {
             const new_weather = new_val - 1
             console.log('setting weather to', new_weather)
             if (new_val === 0) {
@@ -158,3 +158,14 @@ test('delete deletes key indices right away', (done) => {
 test.todo('values can become indexes eg my.name = "shmerel" then set my.name.last = "baker" and expect name to turn into an object')
 test.todo('can unsubscribe')
 test.todo('when subprop changes whole object is sent to on fn')
+test.only('subscribing gives nested data', done => {
+    (async () => {
+        const test_data = { animals: [{ name: 'cow', age: 16 }] }
+        await redibase.set('', test_data)
+        redibase.on('animals', (new_value, old_value) => {
+            expect(old_value).toEqual(test_data)
+            expect(new_value.animals[0]).toEqual({ name: 'sheep', age: 16 })
+        })
+        await redibase.set('animals.0.name', 'sheep')
+    })()
+})

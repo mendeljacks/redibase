@@ -32,16 +32,16 @@ const json_to_path_list = (val) => {
 
 }
 
-export const who_cares = (changes, subscriptions): [{ changed_key: string, fns: any[], new_val: any, old_val: any, watched_key: string }] => {
+export const who_cares = (changes, subscriptions): [{ changed_key: string, fns: any[], new: any, old: any, watched_key: string }] => {
     return reduce((acc, val) => {
         const changed_key = val
-        const new_val = changes.new_pairs[changed_key]
-        const old_val = changes.old_pairs[changed_key]
+        const new_val = changes.new
+        const old_val = changes.old
         const relevant_subscription_keys = keys(subscriptions).filter(key => startsWith(key)(changed_key))
         return concat(
             relevant_subscription_keys.map(watched_key => {
                 const fns = subscriptions[watched_key]
-                return { watched_key, changed_key, new_val, old_val, fns }
+                return { watched_key, changed_key, new: new_val, old: old_val, fns }
             }),
             acc
         )
@@ -117,8 +117,3 @@ export const get_required_indexes = (key_list) => {
     const commands = map(key => ['hmset', key, indexes_to_add_for_given_key(key, required_indexes, key_list)])(keys(required_indexes))
     return commands
 }
-
-
-
-
-

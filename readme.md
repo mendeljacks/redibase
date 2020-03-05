@@ -37,12 +37,13 @@ redibase.get(['people', 0])
 ```
 ## Delete data
 ```js
-redibase.delete('people') 
+redibase.delete('people')
+redibase.get('people') // null
 ```
 
 ## Subscribe to data
 ```js
-redibase.on(['people', 0, 'name'], (old_val, new_val) => console.log(old_val, new_val))
+redibase.on(['people', 0, 'name'], (new_value, old_value) => console.log(old_val, new_val))
 ```
 
 ## Close redis connection
