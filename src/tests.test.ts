@@ -130,7 +130,7 @@ test('Should pubsub to changes', (done) => {
     })()
 })
 
-test.only('delete deletes key indices right away', (done) => {
+test.skip('delete deletes key indices right away', (done) => {
     (async () => {
         await redibase.set('', { people: { are: { here: true } } })
         redibase.on('', async () => {
@@ -142,7 +142,7 @@ test.only('delete deletes key indices right away', (done) => {
     })()
 })
 
-test('delete deletes key indices right away', (done) => {
+test.skip('delete deletes key indices right away', (done) => {
     (async () => {
         await redibase.set('', { people: ['john', 'mary', 'edward'] })
         await redibase.on('', async () => {
@@ -156,7 +156,7 @@ test('delete deletes key indices right away', (done) => {
 test.todo('values can become indexes eg my.name = "shmerel" then set my.name.last = "baker" and expect name to turn into an object')
 test.todo('can unsubscribe')
 test.todo('when subprop changes whole object is sent to on fn')
-test.only('subscribing gives nested data', done => {
+test.skip('subscribing gives nested data', done => {
     (async () => {
         const test_data = { animals: [{ name: 'cow', age: 16 }] }
         await redibase.set('', test_data)
@@ -167,4 +167,4 @@ test.only('subscribing gives nested data', done => {
         await redibase.set('animals.0.name', 'sheep')
     })()
 })
-// test.todo('can store NaN, -0, [], {}')
+test.todo('can store NaN, -0, [], {}')
