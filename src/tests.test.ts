@@ -153,7 +153,18 @@ test('delete deletes key indices right away', (done) => {
         await redibase.delete('')
     })()
 })
+test.todo('values can become indexes eg my.name = "shmerel" then set my.name.last = "baker" and expect name to turn into an object')
+test.todo('can unsubscribe')
+test.todo('when subprop changes whole object is sent to on fn')
+test.only('subscribing gives nested data', done => {
+    (async () => {
+        const test_data = { animals: [{ name: 'cow', age: 16 }] }
+        await redibase.set('', test_data)
+        redibase.on('animals', (new_value, old_value) => {
+            expect(old_value).toEqual(test_data)
+            expect(new_value.animals[0]).toEqual({ name: 'sheep', age: 16 })
+        })
+        await redibase.set('animals.0.name', 'sheep')
+    })()
+})
 // test.todo('can store NaN, -0, [], {}')
-// test.todo('values can become indexes eg my.name = "shmerel" then set my.name.last = "baker" and expect name to turn into an object')
-// test.todo('can unsubscribe')
-// test.todo('when subprop changes whole object is sent to on fn')

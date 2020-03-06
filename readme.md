@@ -37,7 +37,8 @@ redibase.get(['people', 0])
 ```
 ## Delete data
 ```js
-redibase.delete('people') 
+redibase.delete('people')
+redibase.get('people') // null
 ```
 
 ## Subscribe to data
@@ -56,5 +57,7 @@ You can always access the redis directly
 ```js
 redibase.client.mget(my_args)
 ```
+## Limitations 
+The maximum number of nesting layers is limited by the javascript recursion depth, which is around 10000. By comparison, firebase allows 32 layers of nesting.
 
 The maintainers are always happy to add custom features if you ask with examples.

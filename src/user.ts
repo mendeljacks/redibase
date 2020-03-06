@@ -81,17 +81,18 @@ export const user_delete = async (path, client, quiet) => {
     }
 
     await redis_commands(todo, client)
-    if (quiet) return
-    client.publish('changes', stringify({ old_pairs: pairs, new_pairs: reduce((acc, val) => ({ ...acc, [val]: null }), {}, keys(pairs)) }))
+    if (quiet) return pairs
+    client.publish('changes', stringify({ old: pairs_to_json(pairs), new: null }))
+    return pairs
 }
 
 export const user_set = async (path, given_child_pairs, client) => {
-    await user_delete(path, client, true)
+    const old_pairs = await user_delete(path, client, true)
     const add_children_command = ['mset', given_child_pairs]
     const add_to_index_commands = get_required_indexes(keys(given_child_pairs))
     await redis_commands([add_children_command, ...add_to_index_commands], client)
 
-    client.publish('changes', stringify({ old_pairs: {}, new_pairs: given_child_pairs }))
+    client.publish('changes', stringify({ old: pairs_to_json(old_pairs), new: pairs_to_json(given_child_pairs) }))
 
 }
 
