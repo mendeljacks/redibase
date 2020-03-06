@@ -11,7 +11,7 @@ npm i redibase  // Or yarn add redibase
 ```
 
 ## Initialise a redis connection
-Parameters are passed directly to the redis constructor
+Parameters are passed directly to the redis constructor.
 ```js
 import { connect } from 'redibase'
 const redibase = connect('redis://....')
@@ -37,12 +37,14 @@ redibase.get(['people', 0])
 ```
 ## Delete data
 ```js
-redibase.delete('people') 
+redibase.delete('people')
+redibase.get('people') // null
 ```
 
 ## Subscribe to data
 ```js
-redibase.on(['people', 0, 'name'], (old_val, new_val) => console.log(old_val, new_val))
+const subscription_id = redibase.on(['people', 0, 'name'], (new_val, old_val) => console.log(new_val, old_val))
+redibase.off(subscription_id)
 ```
 
 ## Close redis connection
@@ -50,4 +52,12 @@ redibase.on(['people', 0, 'name'], (old_val, new_val) => console.log(old_val, ne
 redibase.quit()
 ```
 
+## Unsupported features
+You can always access the redis directly
+```js
+redibase.client.mget(my_args)
+```
+## Limitations 
+The maximum number of nesting layers is limited by the javascript recursion depth, which is around 10000. By comparison, firebase allows 32 layers of nesting.
 
+The maintainers are always happy to add custom features if you ask with examples.

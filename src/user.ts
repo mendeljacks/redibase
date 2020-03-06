@@ -1,28 +1,60 @@
-import { compose, difference, dropLast, equals, filter, head, intersection, isNil, keys, last, map, mergeAll, pickAll, prop, reject, slice, toPairs, toString, unnest, without, zipObj } from "ramda";
-import { delete_parent_indices, is_array, key_to_path, merge_keys, pairs_to_json, path_to_key, strict_path_or } from "./pure";
-import { redis_delete, redis_get, redis_set } from "./redis";
+import { compose, equals, isNil, keys, last, reduce, slice, unnest, addIndex, map, filter, zipObj, isEmpty } from "ramda";
+import { get_required_indexes, pairs_to_json, path_to_key, strict_path_or, stringify, concat_with_dot } from "./pure";
+import { redis_commands } from "./redis";
 
 const nested_get = async (path: [string | number], client, { include_index_keys, max_layers }) => {
-    return get_pairs([path_to_key(path)], {}, client, include_index_keys, 0, max_layers)
+    const key = path_to_key(path)
+    const [entry_point_node_type] = await redis_commands([['type', key]], client)
+    const branch_keys = entry_point_node_type === 'hash' ? [key] : []
+    const leaf_keys = entry_point_node_type === 'hash' ? [] : [key]
+    return get_pairs(branch_keys, leaf_keys, {}, client, { include_index_keys, max_layers }, 0)
 }
 
-const get_pairs = async (key_list, output, client, include_index_keys, current_layer, max_layers) => {
-    if (current_layer === max_layers) return output
-    const value_list = await redis_get(key_list, client)
+// current_layer = 1
+// "" => {people: 'branch', animals: 'branch'}
 
-    const found_values = zipObj(key_list, value_list)
-    const sub_keys = compose(
+// // current_layer = 2
+// "people" => {0: 'branch', 1: 'branch'}
+// "animals" => {0: 'branch', 1: 'branch', 2: 'branch'}
+
+// // current_layer = 3
+// 'people.0' => {name: 'leaf', age: 'leaf'}
+// 'people.1' => {name: 'leaf', settings: 'branch'}
+// 'animals.0'
+// 'animals.1'
+// 'animals.2'
+
+// // current_layer = 4
+// 'people.0.name'
+
+const get_pairs = async (branch_keys, leaf_keys, output, client, { include_index_keys, max_layers }, current_layer) => {
+    if (current_layer === max_layers) return output
+
+    const [leaf_results, branch_results] = await Promise.all([
+        leaf_keys.length > 0 ? redis_commands([['mget', ...leaf_keys]], client).then(unnest) : Promise.resolve([]),
+        branch_keys.length > 0 ? redis_commands(branch_keys.map(bk => ['hgetall', bk]), client) : Promise.resolve([])
+    ])
+
+    const next_keys = key_type => compose(
         unnest,
-        map(pair =>
-            map(index_end =>
-                head(pair) + `${head(pair) === "" ? '' : '.'}` + index_end
-            )(last(pair))),
-        toPairs,
-        filter(is_array)
-    )(found_values)
-    const new_output = { ...output, ...(include_index_keys ? found_values : reject(is_array)(found_values)) }
-    if (sub_keys.length === 0) return new_output
-    return get_pairs(sub_keys, new_output, client, include_index_keys, current_layer + 1, max_layers)
+        addIndex(map)((branch_key, i) => {
+            const branch_indices = filter(equals(key_type), branch_results[i])
+            return keys(branch_indices).map(concat_with_dot(branch_key))
+        })
+    )(branch_keys)
+
+    const next_branch_keys = next_keys('branch')
+    const next_leaf_keys = next_keys('leaf')
+
+    const new_branch_output = zipObj(branch_keys, branch_results)
+    const new_leaf_output = zipObj(leaf_keys, leaf_results)
+
+    const new_output = include_index_keys 
+        ? { ...output, ...new_leaf_output, ...new_branch_output }
+        : { ...output, ...new_leaf_output }
+
+    if (isEmpty(next_branch_keys) && isEmpty(next_leaf_keys)) return new_output
+    return get_pairs(next_branch_keys, next_leaf_keys, new_output, client, { include_index_keys, max_layers }, current_layer + 1)
 
 }
 
@@ -32,56 +64,35 @@ export const user_get = async (path, client) => {
     const output = equals(path, [""]) ? json_obj : strict_path_or(undefined, path, json_obj)
     return output
 }
-export const user_delete = async (path, client) => {
+export const user_delete = async (path, client, quiet) => {
     const pairs = await nested_get(path, client, { include_index_keys: true, max_layers: -1 })
-    await redis_delete(pairs, keys(pairs), client)
+
+    var todo = [['del', ...keys(pairs)]]
+
     if (!equals(path, [""])) {
         const one_layer_up = await nested_get(slice(0, -1)(path), client, { include_index_keys: true, max_layers: 1 })
-
-        // if (all(is_numeric_string)(one_layer_up)) { // fill_holes // debugger   }
 
         // remove the one key from the index
         if (!isNil(one_layer_up)) {
             const last_el = last(path)
-            const second_to_last_el = path.length === 1 ? '' : last(dropLast(1, path))
-            const old_index = prop(second_to_last_el)(one_layer_up)
-            const new_index = without(toString(last_el))(old_index || [])
             const key_to_update = path_to_key(slice(0, -1)(path))
-            const update_obj = { [key_to_update]: new_index }
-            await redis_set({ [key_to_update]: pairs[key_to_update] }, update_obj, client)
+            todo.push(['hdel', key_to_update, last_el])
         }
     }
+
+    await redis_commands(todo, client)
+    if (quiet) return pairs
+    client.publish('changes', stringify({ old: pairs, new: reduce((acc, val) => ({ ...acc, [val]: null }), {}, keys(pairs)) }))
+    return pairs
 }
 
 export const user_set = async (path, given_child_pairs, client) => {
-    const parent_keys = path.length > 0 && !equals(path, ['']) ? path.map((el, i) => slice(0, i, path)).map(path_to_key) : []
+    const old_pairs = await user_delete(path, client, true)
+    const add_children_command = ['mset', given_child_pairs]
+    const add_to_index_commands = get_required_indexes(keys(given_child_pairs))
+    await redis_commands([add_children_command, ...add_to_index_commands], client)
 
-    const [existing_child_pairs, existing_parent_pairs] = await Promise.all([
-        nested_get(path, client, { include_index_keys: true, max_layers: -1 }),
-        parent_keys.length > 0 ? get_pairs(parent_keys, {}, client, true, 0, 1) : Promise.resolve({})
-    ])
-    const existing_pairs = { ...existing_parent_pairs, ...existing_child_pairs }
-
-    const given_parent_pairs = mergeAll(parent_keys.map((key, i) => ({
-        [key]: [path[i].toString()]
-    })))
-    const given_pairs = { ...given_child_pairs, ...given_parent_pairs }
-
-    const new_keys = difference(keys(given_pairs), keys(existing_pairs))
-    const missing_keys = difference(keys(existing_pairs), keys(given_pairs))
-    const updated_keys = intersection(keys(existing_pairs), keys(given_pairs))
-    const updated_keys_changed = reject(updated_key => equals(existing_pairs[updated_key], given_pairs[updated_key]))(updated_keys)
-    const merged_given_pairs = merge_keys(existing_pairs, given_pairs, updated_keys_changed)
-    const without_parent_indices = delete_parent_indices(missing_keys.map(key_to_path), merged_given_pairs)
-
-    const set_obj = pickAll([...new_keys, ...updated_keys_changed])({ ...merged_given_pairs, ...without_parent_indices })
-    const old_obj = pickAll([...new_keys, ...updated_keys_changed])(existing_pairs)
-    const old_delete_obj = pickAll(missing_keys)(existing_pairs)
-
-    await redis_delete(old_delete_obj, missing_keys, client)
-    await redis_set(old_obj, set_obj, client)
+    client.publish('changes', stringify({ old: old_pairs, new: given_child_pairs }))
 
 }
-
-
 
