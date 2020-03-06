@@ -31,7 +31,7 @@ const get_pairs = async (branch_keys, leaf_keys, output, client, { include_index
     if (current_layer === max_layers) return output
 
     const [leaf_results, branch_results] = await Promise.all([
-        leaf_keys.length > 0 ? unnest(redis_commands([['mget', ...leaf_keys]], client)) : Promise.resolve([]),
+        leaf_keys.length > 0 ? redis_commands([['mget', ...leaf_keys]], client).then(unnest) : Promise.resolve([]),
         branch_keys.length > 0 ? redis_commands(branch_keys.map(bk => ['hgetall', bk]), client) : Promise.resolve([])
     ])
 
@@ -50,8 +50,8 @@ const get_pairs = async (branch_keys, leaf_keys, output, client, { include_index
     const new_leaf_output = zipObj(leaf_keys, leaf_results)
 
     const new_output = include_index_keys 
-        ? { ...output, ...new_branch_output, ...new_leaf_output }
-        : { ...output, ...new_branch_output }
+        ? { ...output, ...new_leaf_output, ...new_branch_output }
+        : { ...output, ...new_leaf_output }
 
     if (isEmpty(next_branch_keys) && isEmpty(next_leaf_keys)) return new_output
     return get_pairs(next_branch_keys, next_leaf_keys, new_output, client, { include_index_keys, max_layers }, current_layer + 1)

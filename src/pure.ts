@@ -4,6 +4,7 @@ var serialize = require('serialize-javascript')
 export const is_array = el => type(el) === 'Array'
 export const is_object = el => type(el) === 'Object'
 export const is_array_or_object = el => type(el) === 'Array' || type(el) === 'Object'
+const ensure_is_array = value => is_array(value) ? value : [value]
 
 export const is_numeric_string = test(/^0$|^[1-9][0-9]*$/)
 export const path_to_key = path => type(path) === "Array" ? path.join('.') : path
@@ -12,7 +13,11 @@ export const key_to_path = path => type(path) === "String" ? compose(map(el => i
 export const stringify = (value: any): string => serialize(value, { ignoreFunction: true })
 export const parse = (serializedJavascript: string): any => eval('(' + serializedJavascript + ')')
 
-export const concat_if_nonexistent = (array, append_array) => compose(uniq, concat(array))(append_array)
+export const concat_if_nonexistent = (arr1, arr2) => uniq([...arr1, ...arr2])
+export const concat_with_dot = curry((a, b) => compose(
+    join('.'),
+    reject(isEmpty)
+)([a, b]))
 
 const json_to_path_list = (val) => {
     if (is_array(val)) {
@@ -46,7 +51,7 @@ export const who_cares = (changes, subscriptions): [{ changed_key: string, fns: 
             acc
         )
 
-    }, [])(keys(changes.old_pairs))
+    }, [])(keys({...changes.old_pairs, ...changes.new_pairs}))
 
 }
 
@@ -81,10 +86,7 @@ export const pairs_to_json = pairs => {
 
 export const map_keys = curry((fn, obj) => fromPairs(map(adjust(0, fn), toPairs(obj))))
 
-export const concat_with_dot = curry((a, b) => compose(
-    join('.'),
-    reject(isEmpty)
-)([a, b]))
+
 
 export const delete_parent_indices = (missing_paths, data) => {
 
@@ -100,14 +102,15 @@ export const delete_parent_indices = (missing_paths, data) => {
     return output
 }
 
-const ensure_is_array = value => is_array(value) ? value : [value]
+
 const parent_keys = shpath => shpath.length > 0 && !equals(shpath, ['']) ? shpath.map((el, i) => ({ [path_to_key(slice(0, i, shpath))]: key_to_path(shpath)[i] })) : []
 
 export const get_required_indexes = (key_list) => {
     const required_indexes = reduce((acc, val) => {
-        const breakdown = compose(key_to_path)(val)
-        const pkeys = compose(mergeAll, parent_keys)(breakdown)
-        return mergeWithKey((k, l, r) => uniq(concat(ensure_is_array(l), ensure_is_array(r))))(acc, pkeys)
+        const pkeys = compose(mergeAll, parent_keys, key_to_path)(val)
+        const left = map(ensure_is_array)(acc)
+        const right = map(ensure_is_array)(pkeys)
+        return mergeWithKey((k, l, r) => concat_if_nonexistent(l, r))(left, right)
     }, {})(key_list)
 
     const indexes_to_add_for_given_key = (key, required_indexes, key_list) => {

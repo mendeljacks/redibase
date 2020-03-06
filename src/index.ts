@@ -1,7 +1,8 @@
-import { concat, curry } from 'ramda'
+import { assocPath, curry, values } from 'ramda'
 import { concat_with_dot, json_to_pairs, key_to_path, map_keys, parse, path_to_key, who_cares } from './pure'
 import { allowable_value_schema, key_or_path_schema } from './schemas'
 import { user_delete, user_get, user_set } from './user'
+const shortid = require('shortid')
 const Redis = require('ioredis')
 
 const connect = (connection_args) => {
@@ -14,7 +15,8 @@ const connect = (connection_args) => {
         const changes = parse(message)
         const todo_list = who_cares(changes, subscriptions)
         todo_list.map(task => {
-            task.fns.map(fn => fn(task.old_val, task.new_val))
+            const functions_to_run = values(task.fns)
+            functions_to_run.map(fn => fn(task.new_val, task.old_val))
         })
     })
 
@@ -40,8 +42,13 @@ const connect = (connection_args) => {
             await user_delete(key_to_path(key), client, false)
         },
         quit: () => client.quit(),
-        on: (path: string | any[], cb) => { 
-            subscriptions[path_to_key(path)] = concat(subscriptions[path_to_key(path)] || [], [cb]) 
+        on: (path: string | any[], cb) => {
+            const subscription_id = shortid.generate()
+            subscriptions = assocPath([path_to_key(path), subscription_id], cb)(subscriptions)
+            return subscription_id
+        },
+        off: (subscription_id) => {
+            // subscriptions = find and remove by id
         },
         client
     }
