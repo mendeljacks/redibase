@@ -39,9 +39,10 @@ const undecorate = (result, original_command) => {
 
 export const redis_commands = async (command_list: any[][], client) => {
     const decorated_command_list = reject(isNil, command_list.map(decorate))
-    console.time(`running ${decorated_command_list.length} commands in a transaction`)
+    const timestamp = Date.now()
+    console.time(`${timestamp} running ${decorated_command_list.length} commands in a transaction`)
     const results = await client.multi(decorated_command_list).exec()
-    console.timeEnd(`running ${decorated_command_list.length} commands in a transaction`)
+    console.timeEnd(`${timestamp} running ${decorated_command_list.length} commands in a transaction`)
     const output = results.map((result, i) => undecorate(result[1], command_list[i][0]))
     return output
 }
