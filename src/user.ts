@@ -75,6 +75,7 @@ const get_pairs_lua = async (branch_keys, leaf_keys, output, client, { include_i
 const nested_get = async (path: [string | number], client, { include_index_keys, max_layers }) => {
     const key = path_to_key(path)
     const [entry_point_node_type] = await redis_commands([['type', key]], client)
+    if (entry_point_node_type === 'none') return {key: null}
     const branch_keys = entry_point_node_type === 'hash' ? [key] : []
     const leaf_keys = entry_point_node_type === 'hash' ? [] : [key]
     const pairs = await get_pairs_lua(branch_keys, leaf_keys, {}, client, { include_index_keys, max_layers }, 0)
