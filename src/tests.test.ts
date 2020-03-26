@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { connect } from '../index'
 import { parse, stringify } from './pure'
 const blns = require('blns')

@@ -1,15 +1,15 @@
-import { assocPath, curry, values } from 'ramda'
+import { assocPath, curry } from 'ramda'
 import { concat_with_dot, json_to_pairs, key_to_path, map_keys, parse, path_to_key, who_cares } from './pure'
 import { allowable_value_schema, key_or_path_schema } from './schemas'
 import { user_delete, user_get, user_set } from './user'
 const shortid = require('shortid')
 const Redis = require('ioredis')
 
-const connect = (connection_args, options={}) => {
+const connect = (connection_args, options = {}) => {
     const client = new Redis(connection_args)
-    client.__redibase_options__=options
+    client.__redibase_options__ = options
     const subscriber = new Redis(connection_args)
-    var subscriptions = {}
+    let subscriptions = {}
     subscriber.subscribe('changes')
     subscriber.on("message", (channel, message) => {
         if (channel !== 'changes') return

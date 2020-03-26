@@ -1,5 +1,5 @@
-import { compose, equals, isNil, keys, last, reduce, slice, unnest, addIndex, map, filter, zipObj, isEmpty } from "ramda";
-import { get_required_indexes, pairs_to_json, path_to_key, strict_path_or, stringify, concat_with_dot, unpair, is_array, parse } from "./pure";
+import { addIndex, compose, equals, filter, isEmpty, isNil, keys, last, map, reduce, slice, unnest, zipObj } from "ramda";
+import { concat_with_dot, get_required_indexes, is_array, pairs_to_json, parse, path_to_key, strict_path_or, stringify, unpair } from "./pure";
 import { redis_commands } from "./redis";
 
 const get_pairs_lua = async (branch_keys, leaf_keys, output, client, { include_index_keys, max_layers }, current_layer) => {
@@ -63,8 +63,8 @@ const get_pairs_lua = async (branch_keys, leaf_keys, output, client, { include_i
     return to_pairs(x)
 `
     const [response] = await redis_commands([['eval', query_string, 0]], client)
-    const unpaired_indexes = response.map((el,i)=> {
-        if (i%2===0) return el
+    const unpaired_indexes = response.map((el, i) => {
+        if (i % 2 === 0) return el
         return is_array(el) ? unpair(el) : parse(el)
     })
     const sanitized = unpair(unpaired_indexes)
@@ -104,7 +104,7 @@ const get_pairs = async (branch_keys, leaf_keys, output, client, { include_index
     const new_branch_output = zipObj(branch_keys, branch_results)
     const new_leaf_output = zipObj(leaf_keys, leaf_results)
 
-    const new_output = include_index_keys 
+    const new_output = include_index_keys
         ? { ...output, ...new_leaf_output, ...new_branch_output }
         : { ...output, ...new_leaf_output }
 
@@ -122,7 +122,7 @@ export const user_get = async (path, client) => {
 export const user_delete = async (path, client, quiet) => {
     const pairs = await nested_get(path, client, { include_index_keys: true, max_layers: -1 })
 
-    var todo = [['del', ...keys(pairs)]]
+    const todo = [['del', ...keys(pairs)]]
 
     if (!equals(path, [""])) {
         const one_layer_up = await nested_get(slice(0, -1)(path), client, { include_index_keys: true, max_layers: 1 })

@@ -1,5 +1,5 @@
-import { compose, concat, isNil, keys, map, toPairs, reject, unnest, reduce, includes } from 'ramda'
-import { map_keys, parse, stringify, key_to_path } from './pure'
+import { compose, concat, includes, isNil, map, reject } from 'ramda'
+import { map_keys, parse, stringify } from './pure'
 
 const decorate = (command: any[]) => {
     if (command.length < 2) return

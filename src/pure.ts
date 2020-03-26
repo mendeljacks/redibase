@@ -1,5 +1,5 @@
 import { adjust, assocPath, chain, compose, concat, curry, dropLast, equals, fromPairs, hasPath, includes, isEmpty, isNil, join, keys, last, map, mergeAll, mergeWithKey, path, reduce, reject, slice, split, startsWith, test, toPairs, toString, type, uniq, unnest, values, without, zipObj } from "ramda";
-var serialize = require('serialize-javascript')
+const serialize = require('serialize-javascript')
 
 export const is_array = el => type(el) === 'Array'
 export const is_object = el => type(el) === 'Object'
@@ -18,7 +18,7 @@ export const concat_with_dot = curry((a, b) => compose(
     join('.'),
     reject(isEmpty)
 )([a, b]))
-export const unpair = arr => zipObj(arr.filter((a,i)=>i%2===0), arr.filter((a,i)=>i%2===1))
+export const unpair = arr => zipObj(arr.filter((a, i) => i % 2 === 0), arr.filter((a, i) => i % 2 === 1))
 const json_to_path_list = (val) => {
     if (is_array(val)) {
         const child_paths = unnest(val.map((child, i) =>
@@ -37,7 +37,7 @@ const json_to_path_list = (val) => {
 
 }
 
-export const who_cares = (changes, subscriptions): [{ changed_key: string, fns: any[], new: any, old: any, watched_key: string }] => {
+export const who_cares = (changes, subscriptions): [{ changed_key: string; fns: any[]; new: any; old: any; watched_key: string }] => {
     return reduce((acc, val) => {
         const changed_key = val
         const new_pairs = changes.new[changed_key]
