@@ -11,7 +11,7 @@ npm i redibase  // Or yarn add redibase
 ```
 
 ## Initialise a redis connection
-Parameters are passed directly to the redis constructor.
+Parameters are passed directly to the redis constructor. An second parameter can be added for options eg connect(connection_string, {verbose: true}) 
 ```js
 import { connect } from 'redibase'
 const redibase = connect('redis://....')

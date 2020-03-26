@@ -1,4 +1,4 @@
-import { compose, concat, isNil, keys, map, toPairs, reject,  unnest, reduce, includes } from 'ramda'
+import { compose, concat, isNil, keys, map, toPairs, reject, unnest, reduce, includes } from 'ramda'
 import { map_keys, parse, stringify, key_to_path } from './pure'
 
 const decorate = (command: any[]) => {
@@ -31,7 +31,7 @@ const undecorate = (result, original_command) => {
     if (original_command === 'mget') {
         return result.map(el => isNil(el) ? el : parse(el))
     }
-    if (includes(original_command, ['type', 'hgetall', 'del', 'mset', 'hmset', 'hdel', 'eval' ])) {
+    if (includes(original_command, ['type', 'hgetall', 'del', 'mset', 'hmset', 'hdel', 'eval'])) {
         return result
     }
     throw new Error('original command type not recognized...' + original_command)
@@ -40,9 +40,13 @@ const undecorate = (result, original_command) => {
 export const redis_commands = async (command_list: any[][], client) => {
     const decorated_command_list = reject(isNil, command_list.map(decorate))
     const timestamp = Date.now()
-    console.time(`${timestamp} running ${decorated_command_list.length} commands in a transaction`)
+    if (client.__redibase_options__.verbose) {
+        console.time(`${timestamp} running ${decorated_command_list.length} commands in a transaction`)
+    }
     const results = await client.multi(decorated_command_list).exec()
-    console.timeEnd(`${timestamp} running ${decorated_command_list.length} commands in a transaction`)
+    if (client.__redibase_options__.verbose) {
+        console.timeEnd(`${timestamp} running ${decorated_command_list.length} commands in a transaction`)
+    }
     const output = results.map((result, i) => undecorate(result[1], command_list[i][0]))
     return output
 }

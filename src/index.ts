@@ -5,8 +5,9 @@ import { user_delete, user_get, user_set } from './user'
 const shortid = require('shortid')
 const Redis = require('ioredis')
 
-const connect = (connection_args) => {
+const connect = (connection_args, options={}) => {
     const client = new Redis(connection_args)
+    client.__redibase_options__=options
     const subscriber = new Redis(connection_args)
     var subscriptions = {}
     subscriber.subscribe('changes')
