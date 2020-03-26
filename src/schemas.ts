@@ -9,7 +9,7 @@ export const key_or_path_schema = Joi.alternatives(
 
 export const allowable_value_schema = Joi.alternatives().try(
     Joi.object().pattern(
-        Joi.string().pattern(/^0$|^[1-9][0-9]*$/, { invert: true }).pattern(/^[a-zA-Z0-9_]*$/),
+        Joi.string().pattern(/^0$|^[1-9][0-9]*$/, { invert: true }).pattern(/^[a-zA-Z0-9-_]*$/),
         Joi.link('...')
     ),
     Joi.any().valid(null),
