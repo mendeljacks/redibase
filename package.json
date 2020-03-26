@@ -6,6 +6,7 @@
   "scripts": {
     "test": "node --inspect-brk=9876 ./node_modules/jest/bin/jest.js",
     "build": "tsc",
+    "deploy": "npm version patch && npm run build && npm publish",
     "release:major": "changelog -M && git add CHANGELOG.md && git commit -m 'updated CHANGELOG.md' && npm version major && git push origin && git push origin --tags",
     "release:minor": "changelog -m && git add CHANGELOG.md && git commit -m 'updated CHANGELOG.md' && npm version minor && git push origin && git push origin --tags",
     "release:patch": "changelog -p && git add CHANGELOG.md && git commit -m 'updated CHANGELOG.md' && npm version patch && git push origin && git push origin --tags",
