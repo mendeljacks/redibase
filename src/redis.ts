@@ -1,6 +1,6 @@
 import { compose, concat, includes, isNil, map, reject } from 'ramda'
 import { map_keys, parse, stringify } from './pure'
-
+const shortid = require('shortid')
 const decorate = (command: any[]) => {
     if (command.length < 2) return
     if (includes(command[0], ['mget', 'del', 'hgetall', 'hmget'])) {
@@ -39,13 +39,13 @@ const undecorate = (result, original_command) => {
 
 export const redis_commands = async (command_list: any[][], client) => {
     const decorated_command_list = reject(isNil, command_list.map(decorate))
-    const timestamp = Date.now()
+    const random = shortid.generate()
     if (client.__redibase_options__.verbose) {
-        console.time(`${timestamp} running ${decorated_command_list.length} commands in a transaction`)
+        console.time(`${random} running ${decorated_command_list.length} commands in a transaction`)
     }
     const results = await client.multi(decorated_command_list).exec()
     if (client.__redibase_options__.verbose) {
-        console.timeEnd(`${timestamp} running ${decorated_command_list.length} commands in a transaction`)
+        console.timeEnd(`${random} running ${decorated_command_list.length} commands in a transaction`)
     }
     const output = results.map((result, i) => undecorate(result[1], command_list[i][0]))
     return output
