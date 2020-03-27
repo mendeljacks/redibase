@@ -1,8 +1,8 @@
-import { addIndex, compose, equals, filter, isEmpty, isNil, keys, last, map, reduce, slice, unnest, zipObj } from "ramda";
-import { concat_with_dot, get_required_indexes, is_array, pairs_to_json, parse, path_to_key, strict_path_or, stringify, unpair } from "./pure";
+import { compose, equals, isNil, keys, last, pathOr,  reduce, slice } from "ramda";
+import { get_required_indexes, is_array, pairs_to_json, parse, path_to_key, strict_path_or, stringify, unpair } from "./pure";
 import { redis_commands } from "./redis";
 
-const get_pairs_lua = async (branch_keys, leaf_keys, output, client, { include_index_keys, max_layers }, current_layer) => {
+const get_pairs_lua = async (root_key, client, { include_index_keys, max_layers }) => {
     const query_string = `
     local ternary = function ( cond , T , F ) if cond then return T() else return F() end end
     local map = function(func, array) local new_array = {} for i,v in ipairs(array) do new_array[i] = func(v) end return new_array end
@@ -43,7 +43,7 @@ const get_pairs_lua = async (branch_keys, leaf_keys, output, client, { include_i
                 end
             end
             local new_output = output
-            if include_index_keys then
+            if include_index_keys == 'true' then
                 for i = 1, #branch_keys do
                     new_output[branch_keys[i]] = branch_results[i]
                 end
@@ -59,10 +59,19 @@ const get_pairs_lua = async (branch_keys, leaf_keys, output, client, { include_i
         end
         return output
     end
-    local x = get_pairs({${branch_keys.map(el => `"${el}"`)}}, {${leaf_keys.map(el => `"${el}"`)}}, {}, { include_index_keys=${include_index_keys}, max_layers=${max_layers} }, 0)
+    local root_key = KEYS[1]
+    local root_key_type = redis.call('type', prefix(root_key)).ok
+    local branch_keys = {}
+    local leaf_keys = {}
+    if root_key_type == 'hash' then
+        table.insert(branch_keys, root_key)
+    else
+        table.insert(leaf_keys, root_key)
+    end
+    local x = get_pairs(branch_keys, leaf_keys, {}, { include_index_keys=KEYS[2], max_layers=KEYS[3] }, 0)
     return to_pairs(x)
 `
-    const [response] = await redis_commands([['eval', query_string, 0]], client)
+    const [response] = await redis_commands([['eval', query_string, 3, root_key, include_index_keys, max_layers]], client)
     const unpaired_indexes = response.map((el, i) => {
         if (i % 2 === 0) return el
         return is_array(el) ? unpair(el) : parse(el)
@@ -72,61 +81,20 @@ const get_pairs_lua = async (branch_keys, leaf_keys, output, client, { include_i
 
 }
 
-const nested_get = async (path: [string | number], client, { include_index_keys, max_layers }) => {
-    const key = path_to_key(path)
-    const [entry_point_node_type] = await redis_commands([['type', key]], client)
-    if (entry_point_node_type === 'none') return {key: null}
-    const branch_keys = entry_point_node_type === 'hash' ? [key] : []
-    const leaf_keys = entry_point_node_type === 'hash' ? [] : [key]
-    const pairs = await get_pairs_lua(branch_keys, leaf_keys, {}, client, { include_index_keys, max_layers }, 0)
-    // const pairs = await get_pairs(branch_keys, leaf_keys, {}, client, { include_index_keys, max_layers }, 0)
-    return pairs
-}
-
-const get_pairs = async (branch_keys, leaf_keys, output, client, { include_index_keys, max_layers }, current_layer) => {
-    if (current_layer === max_layers) return output
-
-    const [leaf_results, branch_results] = await Promise.all([
-        leaf_keys.length > 0 ? redis_commands([['mget', ...leaf_keys]], client).then(unnest) : Promise.resolve([]),
-        branch_keys.length > 0 ? redis_commands(branch_keys.map(bk => ['hgetall', bk]), client) : Promise.resolve([])
-    ])
-
-    const next_keys = key_type => compose(
-        unnest,
-        addIndex(map)((branch_key, i) => {
-            const branch_indices = filter(equals(key_type), branch_results[i])
-            return keys(branch_indices).map(concat_with_dot(branch_key))
-        })
-    )(branch_keys)
-
-    const next_branch_keys = next_keys('branch')
-    const next_leaf_keys = next_keys('leaf')
-
-    const new_branch_output = zipObj(branch_keys, branch_results)
-    const new_leaf_output = zipObj(leaf_keys, leaf_results)
-
-    const new_output = include_index_keys
-        ? { ...output, ...new_leaf_output, ...new_branch_output }
-        : { ...output, ...new_leaf_output }
-
-    if (isEmpty(next_branch_keys) && isEmpty(next_leaf_keys)) return new_output
-    return get_pairs(next_branch_keys, next_leaf_keys, new_output, client, { include_index_keys, max_layers }, current_layer + 1)
-
-}
 
 export const user_get = async (path, client) => {
-    const pairs = await nested_get(path, client, { include_index_keys: false, max_layers: -1 })
+    const pairs = await get_pairs_lua(path_to_key(path), client, {include_index_keys: false, max_layers: -1})
     const json_obj = compose(pairs_to_json)(pairs)
     const output = equals(path, [""]) ? json_obj : strict_path_or(undefined, path, json_obj)
     return output
 }
 export const user_delete = async (path, client, quiet) => {
-    const pairs = await nested_get(path, client, { include_index_keys: true, max_layers: -1 })
+    const pairs = await get_pairs_lua(path_to_key(path), client, {include_index_keys: true, max_layers: -1})
 
     const todo = [['del', ...keys(pairs)]]
 
     if (!equals(path, [""])) {
-        const one_layer_up = await nested_get(slice(0, -1)(path), client, { include_index_keys: true, max_layers: 1 })
+        const one_layer_up = await get_pairs_lua(path_to_key(slice(0, -1)(path)), client, { include_index_keys: true, max_layers: 1 })
 
         // remove the one key from the index
         if (!isNil(one_layer_up)) {

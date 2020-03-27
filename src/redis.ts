@@ -31,7 +31,10 @@ const undecorate = (result, original_command) => {
     if (original_command === 'mget') {
         return result.map(el => isNil(el) ? el : parse(el))
     }
-    if (includes(original_command, ['type', 'hgetall', 'del', 'mset', 'hmset', 'hdel', 'eval'])) {
+    if (includes(original_command, ['type', 'hgetall', 'del', 'mset', 'hmset', 'hdel'])) {
+        return result
+    }
+    if (original_command === 'eval') {
         return result
     }
     throw new Error('original command type not recognized...' + original_command)
