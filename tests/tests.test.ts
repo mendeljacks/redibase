@@ -10,7 +10,7 @@ const sample_data = {
     animals: [{ name: 'cow', age: 2 }, { name: 'sheep', age: 8.2, favorite_color: null }, { name: 'donkey', age: 1 }]
 }
 
-const redibase = connect(process.env.redis, { verbose: true })
+const redibase = connect(process.env.redis, { verbose: false })
 
 beforeEach(async () => {
     await redibase.delete('')
@@ -28,7 +28,7 @@ test.skip('can set leaf at root level', async () => {
     expect(x).toEqual(1)
 })
 
-test.only('Can use job list', async () => {
+test.skip('Can use job list', async () => {
     await redibase.set('', sample_job_list)
     const x = await redibase.get('')
     return x
