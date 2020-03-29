@@ -1,4 +1,4 @@
-import { adjust, assocPath, chain, compose, concat, curry, dropLast, equals, fromPairs, hasPath, includes, isEmpty, isNil, join, keys, last, map, mergeAll, mergeWithKey, path, reduce, reject, slice, split, startsWith, test, toPairs, toString, type, uniq, unnest, values, without, zipObj } from "ramda";
+import { adjust, chain, compose, concat, curry, dropLast, equals, fromPairs, has, hasPath, includes, isEmpty, isNil, join, keys, last, map, mergeAll, path, reduce, reject, slice, split, startsWith, test, toPairs, toString, type, uniq, unnest, values, without, zipObj } from "ramda";
 const serialize = require('serialize-javascript')
 
 export const is_array = el => type(el) === 'Array'
@@ -37,22 +37,23 @@ const json_to_path_list = (val) => {
 
 }
 
-export const who_cares = (changes, subscriptions): [{ changed_key: string; fns: any[]; new: any; old: any; watched_key: string }] => {
-    return reduce((acc, val) => {
-        const changed_key = val
+export const who_cares = (changes, subscriptions): { changed_key: string; fns: any[]; new: any; old: any; watched_key: string }[] => {
+    // eslint-disable-next-line prefer-const
+    let output = []
+
+    const all_keys = uniq([...keys(changes.old), ...keys(changes.new)])
+    for (let i = 0; i < all_keys.length; i++) {
+        const changed_key = all_keys[i]
         const new_pairs = changes.new[changed_key]
         const old_pairs = changes.old[changed_key]
         const relevant_subscription_keys = keys(subscriptions).filter(key => startsWith(key)(changed_key))
-        return concat(
-            relevant_subscription_keys.map(watched_key => {
-                const fns = values(subscriptions[watched_key])
-                return { watched_key, changed_key, new: new_pairs, old: old_pairs, fns }
-            }),
-            acc
-        )
-
-    }, [])(keys({ ...changes.old, ...changes.new }))
-
+        relevant_subscription_keys.map(watched_key => {
+            const fns = values(subscriptions[watched_key])
+            output.push({ watched_key, changed_key, new: new_pairs, old: old_pairs, fns })
+        })
+    }
+    
+    return output
 }
 
 // like pathOr but doesnt return null when value is null and not undefined
@@ -79,12 +80,34 @@ export const json_to_pairs = (json) => {
     return output
 }
 
+
+const _isInteger = (n) => {return (n << 0) === n;} // copied from ramda
+const assocPathfast = function assocPath(path, val, obj) {
+    // eslint-disable-next-line prefer-const
+    let idx = path[0];
+    if (path.length > 1) {
+        // eslint-disable-next-line prefer-const
+        let nextObj = (!isNil(obj) && has(idx, obj)) ? obj[idx] : _isInteger(path[1]) ? [] : {};
+        val = assocPath(Array.prototype.slice.call(path, 1), val, nextObj);
+    }
+    if (_isInteger(idx) && is_array(obj)) {
+        // eslint-disable-next-line prefer-const
+        let arr = [].concat(obj);
+        arr[idx] = val;
+        return arr;
+    } else {
+        obj[idx] = val
+        return obj
+
+    }
+}
+
 export const pairs_to_json = pairs => {
     let output = {}
     const paths = compose(map(key => ({ path: key_to_path(key), val: pairs[key] })), keys)(pairs)
     for (let i = 0; i < paths.length; i++) {
         const path_el = paths[i];
-        output = assocPath(path_el.path, path_el.val, output)
+        output = assocPathfast(path_el.path, path_el.val, output)
     }
     return output
 }

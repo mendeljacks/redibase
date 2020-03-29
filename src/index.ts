@@ -15,8 +15,8 @@ const connect = (connection_args, options = {}) => {
         if (channel !== 'changes') return
         const changes = parse(message)
         const todo_list = who_cares(changes, subscriptions)
-        todo_list.map(task => {
-            task.fns.map(fn => fn(task.new, task.old))
+        todo_list.forEach(task => {
+            task.fns.forEach(fn => fn(task.new, task.old))
         })
     })
 

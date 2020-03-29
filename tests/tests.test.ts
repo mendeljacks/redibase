@@ -20,17 +20,19 @@ afterAll(async () => {
     await redibase.quit()
 })
 
-
-
 test.skip('can set leaf at root level', async () => {
     await redibase.set('', 1)
     const x = await redibase.get('')
     expect(x).toEqual(1)
 })
 
-test.skip('Can use job list', async () => {
+test('Can use large files', async () => {
+    console.time('set')
     await redibase.set('', sample_job_list)
+    console.timeEnd('set')
+    console.time('get')
     const x = await redibase.get('')
+    console.timeEnd('get')
     return x
 
 })
@@ -142,7 +144,7 @@ test('Should pubsub to changes', (done) => {
                 redibase.set('weather', new_weather)
             }
         })
-        const initial_weather = 35
+        const initial_weather = 10
         await redibase.set('weather', initial_weather)
     })()
 })

@@ -102,7 +102,7 @@ end
 
 export const user_get = async (path, client) => {
     const pairs = await get_pairs_lua(path_to_key(path), client, {include_index_keys: false, max_layers: -1})
-    const json_obj = compose(pairs_to_json)(pairs)
+    const json_obj = pairs_to_json(pairs)
     const output = equals(path, [""]) ? json_obj : strict_path_or(undefined, path, json_obj)
     return output
 }
@@ -133,7 +133,6 @@ export const user_set = async (path, given_child_pairs, client) => {
     const add_children_command = ['mset', given_child_pairs]
     const add_to_index_commands = get_required_indexes(keys(given_child_pairs))
     await redis_commands([add_children_command, ...add_to_index_commands], client)
-
     client.publish('changes', stringify({ old: old_pairs, new: given_child_pairs }))
 
 }
