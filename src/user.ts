@@ -124,7 +124,7 @@ export const user_delete = async (path, client, quiet) => {
 
     await redis_commands(todo, client)
     if (quiet) return pairs
-    client.publish('changes', stringify({ old: pairs, new: reduce((acc, val) => ({ ...acc, [val]: null }), {}, keys(pairs)) }))
+    client.publish('changes', stringify({ old: pairs, new: reduce((acc, val) => { acc[val] = null; return acc}, {}, keys(pairs)) }))
     return pairs
 }
 

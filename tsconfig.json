@@ -6,6 +6,6 @@
       "outDir": "./build",
       "strict": false
     },
-    "include": ["src"],
+    "include": ["src", "tests/tests.test.ts"],
     "exclude": ["node_modules"]
   }

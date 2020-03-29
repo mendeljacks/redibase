@@ -69,18 +69,23 @@ export const strict_path_or = (default_val, val_path, obj) => {
 
 export const json_to_pairs = (json) => {
     const path_list = json_to_path_list(json)
-    return reduce((acc, val) => {
+    const output = path_list.reduce((acc, val, i) => {
         const redis_key = path_to_key(val)
         const given_value = strict_path_or(undefined, val, json)
         const redis_value = is_array_or_object(given_value) ? keys(given_value) : given_value
-        return { ...acc, [redis_key]: redis_value }
-    }, {})(path_list)
+        acc[redis_key] = redis_value
+        return acc
+    }, {})
+    return output
 }
 
 export const pairs_to_json = pairs => {
     let output = {}
     const paths = compose(map(key => ({ path: key_to_path(key), val: pairs[key] })), keys)(pairs)
-    paths.map(path_el => output = assocPath(path_el.path, path_el.val, output))
+    for (let i = 0; i < paths.length; i++) {
+        const path_el = paths[i];
+        output = assocPath(path_el.path, path_el.val, output)
+    }
     return output
 }
 
@@ -106,12 +111,20 @@ export const delete_parent_indices = (missing_paths, data) => {
 const parent_keys = shpath => shpath.length > 0 && !equals(shpath, ['']) ? shpath.map((el, i) => ({ [path_to_key(slice(0, i, shpath))]: key_to_path(shpath)[i] })) : []
 
 export const get_required_indexes = (key_list) => {
-    const required_indexes = reduce((acc, val) => {
-        const pkeys = compose(mergeAll, parent_keys, key_to_path)(val)
-        const left = map(ensure_is_array)(acc)
-        const right = map(ensure_is_array)(pkeys)
-        return mergeWithKey((k, l, r) => concat_if_nonexistent(l, r))(left, right)
-    }, {})(key_list)
+    // eslint-disable-next-line prefer-const
+    let required_indexes = {}
+    for (let i = 0; i < key_list.length; i++) {
+        const val = key_list[i];
+        const pkeys = compose(parent_keys, key_to_path)(val)
+
+        for (let j = 0; j < pkeys.length; j++) {
+            const key = Object.keys(pkeys[j])[0]
+            const val = Object.values(pkeys[j])[0]
+            required_indexes[key] = uniq([...(required_indexes[key] || []), val])
+
+        }
+
+    }
 
     const indexes_to_add_for_given_key = (key, required_indexes, key_list) => {
         return mergeAll(required_indexes[key].map(el => ({ [el]: includes(concat_with_dot(key, el), key_list) ? 'leaf' : 'branch' })))
