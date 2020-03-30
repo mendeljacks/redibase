@@ -2,11 +2,17 @@ import { assocPath, curry } from 'ramda'
 import { concat_with_dot, json_to_pairs, key_to_path, map_keys, parse, path_to_key, who_cares } from './pure'
 import { allowable_value_schema, key_or_path_schema } from './schemas'
 import { user_delete, user_get, user_set } from './user'
+import { nested_get } from './lua'
 const shortid = require('shortid')
 const Redis = require('ioredis')
+const Shavaluator = require('redis-evalsha')
+
 
 const connect = (connection_args, options = {}) => {
     const client = new Redis(connection_args)
+    const shavaluator = new Shavaluator(client)
+    client.__shavaluator__ = shavaluator
+    shavaluator.add('nested_get', nested_get)
     client.__redibase_options__ = options
     const subscriber = new Redis(connection_args)
     let subscriptions = {}

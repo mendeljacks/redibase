@@ -54,6 +54,7 @@
     "@hapi/joi": "^17.1.1",
     "ioredis": "^4.16.1",
     "ramda": "^0.27.0",
+    "redis-evalsha": "^1.1.1",
     "serialize-javascript": "^3.0.0",
     "shortid": "^2.2.15"
   },
