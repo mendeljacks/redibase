@@ -1,8 +1,8 @@
 import { assocPath, curry, keys, startsWith, values } from 'ramda'
-import { concat_with_dot, json_to_pairs, key_to_path, map_keys, parse, path_to_key, who_cares } from './pure'
+import { nested_get } from './lua'
+import { concat_with_dot, json_to_pairs, key_to_path, map_keys, parse, path_to_key } from './pure'
 import { allowable_value_schema, key_or_path_schema } from './schemas'
 import { user_delete, user_get, user_set } from './user'
-import { nested_get } from './lua'
 const shortid = require('shortid')
 const Redis = require('ioredis')
 const Shavaluator = require('redis-evalsha')
