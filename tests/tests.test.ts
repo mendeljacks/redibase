@@ -26,59 +26,6 @@ test.skip('can set leaf at root level', async () => {
     expect(x).toEqual(1)
 })
 
-// test.only('can get notified of subproperties', (done) => {
-//     const job1 =  {
-//             "failed_attempts": 0,
-//             "status": "pending",
-//             "queued_at": "2020-03-27T22:44:15.451Z",
-//             "id": "06unSNWvtpLS",
-//             "type": "product",
-//             "store_id": 2,
-//             "subtasks_completed": {
-//                 "product": false,
-//                 "metas": false,
-//                 "variants": false,
-//                 "images": false,
-//                 "price": false,
-//                 "inventory": false
-//             },
-//             "params": {
-//                 "product_id": 177796
-//             },
-//             "priority": 1,
-//             "vendor_id": 1
-//         }
-//     const job2 = {
-//             "subtasks_completed": {
-//                 "images": false,
-//                 "metas": false,
-//                 "inventory": false,
-//                 "product": false,
-//                 "variants": false,
-//                 "price": false
-//             },
-//             "queued_at": "2020-03-27T22:44:15.451Z",
-//             "failed_attempts": 0,
-//             "status": "pending",
-//             "store_id": 1,
-//             "id": "DAU1MWzMnP8",
-//             "priority": 1,
-//             "vendor_id": 4,
-//             "params": {
-//                 "product_id": 3069
-//             },
-//             "type": "product"
-//         };
-//     (async () => {
-//         await redibase.set('job_list.06unSNWvtpLS', job1)
-//         await redibase.on('job_list', async (new_val, old_val) => {
-        
-//            done()
-//         })
-//         await redibase.set('job_list.DAU1MWzMnP8', job2)
-//     })()
-// })
-
 test('Can use large files', async () => {
     console.time('set')
     await redibase.set('', sample_job_list)
