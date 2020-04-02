@@ -55,25 +55,6 @@ const json_to_path_list = (val) => {
 
 }
 
-export const who_cares = (changes, subscriptions): { changed_key: string; fns: any[]; new: any; old: any; watched_key: string }[] => {
-    // eslint-disable-next-line prefer-const
-    let output = []
-
-    const all_keys = uniq([...keys(changes.old), ...keys(changes.new)])
-    for (let i = 0; i < all_keys.length; i++) {
-        const changed_key = all_keys[i]
-        const new_pairs = changes.new[changed_key]
-        const old_pairs = changes.old[changed_key]
-        const relevant_subscription_keys = keys(subscriptions).filter(key => startsWith(key)(changed_key))
-        relevant_subscription_keys.map(watched_key => {
-            const fns = values(subscriptions[watched_key])
-            output.push({ watched_key, changed_key, new: new_pairs, old: old_pairs, fns })
-        })
-    }
-    
-    return output
-}
-
 // like pathOr but doesnt return null when value is null and not undefined
 export const strict_path_or = (default_val, val_path, obj) => {
     if (val_path.length === 0) {

@@ -1,4 +1,4 @@
-import { assocPath, curry } from 'ramda'
+import { assocPath, curry, keys, startsWith, values } from 'ramda'
 import { concat_with_dot, json_to_pairs, key_to_path, map_keys, parse, path_to_key, who_cares } from './pure'
 import { allowable_value_schema, key_or_path_schema } from './schemas'
 import { user_delete, user_get, user_set } from './user'
@@ -20,10 +20,24 @@ const connect = (connection_args, options = {}) => {
     subscriber.on("message", (channel, message) => {
         if (channel !== 'changes') return
         const changes = parse(message)
-        const todo_list = who_cares(changes, subscriptions)
-        todo_list.forEach(task => {
-            task.fns.forEach(fn => fn(task.new, task.old))
-        })
+        const subscription_keys = keys(subscriptions)
+        const new_keys = keys(changes.new)
+        const old_keys = keys(changes.old)
+        for (let i = 0; i < subscription_keys.length; i++) {
+            const subscription_key = subscription_keys[i];
+            const relevant_new_keys = new_keys.filter(new_key => startsWith(subscription_key, new_key))
+            const relevant_old_keys = old_keys.filter(old_key => startsWith(subscription_key, old_key))
+            if (relevant_new_keys.length > 0) {
+                values(subscriptions[subscription_key]).forEach(fn => fn(
+                    relevant_new_keys.reduce((acc, val) => {acc[val] = changes.new[val]; return acc}, {}), 
+                    relevant_old_keys.reduce((acc, val) => {acc[val] = changes.old[val]; return acc}, {})
+                ))
+            }
+        }
+        // const todo_list = who_cares(changes, subscriptions)
+        // todo_list.forEach(task => {
+        //     task.fns.forEach(fn => fn(task.new, task.old))
+        // })
     })
 
 
