@@ -18,7 +18,25 @@ export const concat_with_dot = curry((a, b) => compose(
     join('.'),
     reject(isEmpty)
 )([a, b]))
-export const unpair = arr => zipObj(arr.filter((a, i) => i % 2 === 0), arr.filter((a, i) => i % 2 === 1))
+export const unpair = arr => {
+    // convert [key1,val1,key2,val2] to {key1:val1, key2:val2}
+    // console.time('v1')
+    // eslint-disable-next-line prefer-const
+    let output = {}
+    for (let i = 0; i < arr.length; i++) {
+        if (i%2===0) {
+            const key = arr[i];
+            const val = arr[i+1];
+            output[key] = val
+        }
+        
+    }
+    // console.timeEnd('v1')
+    // console.time('v2')
+    // const output2 = zipObj(arr.filter((a, i) => i % 2 === 0), arr.filter((a, i) => i % 2 === 1))
+    // console.timeEnd('v2')
+    return output
+}
 const json_to_path_list = (val) => {
     if (is_array(val)) {
         const child_paths = unnest(val.map((child, i) =>
