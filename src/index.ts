@@ -29,15 +29,12 @@ const connect = (connection_args, options = {}) => {
             const relevant_old_keys = old_keys.filter(old_key => startsWith(subscription_key, old_key))
             if (relevant_new_keys.length > 0) {
                 values(subscriptions[subscription_key]).forEach(fn => fn(
-                    relevant_new_keys.reduce((acc, val) => {acc[val] = changes.new[val]; return acc}, {}), 
-                    relevant_old_keys.reduce((acc, val) => {acc[val] = changes.old[val]; return acc}, {})
+                    relevant_new_keys.reduce((acc, val) => { acc[val] = changes.new[val]; return acc }, {}),
+                    relevant_old_keys.reduce((acc, val) => { acc[val] = changes.old[val]; return acc }, {})
                 ))
             }
         }
-        // const todo_list = who_cares(changes, subscriptions)
-        // todo_list.forEach(task => {
-        //     task.fns.forEach(fn => fn(task.new, task.old))
-        // })
+
     })
 
 

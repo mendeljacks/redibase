@@ -1,16 +1,18 @@
-export const nested_get = `
+const call_in_chunks = `
 local call_in_chunks = function (command, args)
-local step = 1000
-local output = {}
-for i = 1, #args, step do
-    local result = redis.call(command, unpack(args, i, math.min(i + step - 1, #args)))
-    for j = 1, #result do
-        table.insert(output, result[j])
+    local step = 7000
+    local output = {}
+    for i = 1, #args, step do
+        local result = redis.call(command, unpack(args, i, math.min(i + step - 1, #args)))
+        for j = 1, #result do
+            table.insert(output, result[j])
+        end
     end
+    return output
 end
-return output
-end
-local ternary = function ( cond , T , F ) if cond then return T() else return F() end end
+`
+export const nested_get = `
+${call_in_chunks}
 local map = function(func, array) local new_array = {} for i,v in ipairs(array) do new_array[i] = func(v) end return new_array end
 local filter = function(fn, t) local out = {} for k, v in pairs(t) do if fn(k, v) then out[k] = v end end return out end
 local function to_pairs(obj) 
@@ -31,17 +33,16 @@ local function get_pairs(branch_keys, leaf_keys, output, options, current_layer)
     local max_layers = options.max_layers
     
     while ((current_layer ~= max_layers) and not (#branch_keys == 0 and #leaf_keys == 0)) do
-        local leaf_results = ternary(#leaf_keys > 0, 
-            function () 
-                return call_in_chunks('mget', map(prefix, leaf_keys)) 
-            end, 
-            function () 
-                return {} 
-            end)
-        local branch_results = ternary(#branch_keys > 0, function () return map(function (bk) 
-                    local prefixed = prefix(bk) 
-                    return redis.call('hgetall', prefixed) 
-                end, branch_keys) end, function () return {} end)
+        local leaf_results = {}
+        if (#leaf_keys > 0) then
+            leaf_results = call_in_chunks('mget', map(prefix, leaf_keys)) 
+        end
+    
+        local branch_results = {}
+        if (#branch_keys > 0) then
+            branch_results = map(function (bk) local prefixed = prefix(bk) return redis.call('hgetall', prefixed) end, branch_keys)
+        end
+
         local next_branch_keys = {}
         local next_leaf_keys = {}
         for i,branch_key in ipairs(branch_keys) do

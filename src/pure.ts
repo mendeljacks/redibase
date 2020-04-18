@@ -1,10 +1,9 @@
-import { adjust, chain, compose, concat, curry, dropLast, equals, fromPairs, has, hasPath, includes, isEmpty, isNil, join, keys, last, map, mergeAll, path, reduce, reject, slice, split, startsWith, test, toPairs, toString, type, uniq, unnest, values, without, zipObj } from "ramda";
+import { adjust, chain, compose, curry, dropLast, equals, fromPairs, has, hasPath, includes, isEmpty, isNil, join, keys, last, map, mergeAll, path, reduce, reject, slice, split, test, toPairs, toString, type, uniq, unnest, without } from "ramda";
 const serialize = require('serialize-javascript')
 
 export const is_array = el => type(el) === 'Array'
 export const is_object = el => type(el) === 'Object'
 export const is_array_or_object = el => type(el) === 'Array' || type(el) === 'Object'
-const ensure_is_array = value => is_array(value) ? value : [value]
 
 export const is_numeric_string = test(/^0$|^[1-9][0-9]*$/)
 export const path_to_key = path => type(path) === "Array" ? path.join('.') : path
@@ -13,7 +12,6 @@ export const key_to_path = path => type(path) === "String" ? compose(map(el => i
 export const stringify = (value: any): string => serialize(value, { ignoreFunction: true })
 export const parse = (serializedJavascript: string): any => eval('(' + serializedJavascript + ')')
 
-export const concat_if_nonexistent = (arr1, arr2) => uniq([...arr1, ...arr2])
 export const concat_with_dot = curry((a, b) => compose(
     join('.'),
     reject(isEmpty)

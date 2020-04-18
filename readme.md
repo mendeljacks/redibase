@@ -2,7 +2,7 @@
 
 This package is the redis based alternative to google's firebase.
 The goal is to harness the speed of vanilla redis while adding much loved firebase features.
-With this package you can subscribe to data changes, store deeply nested data without stringifying and you can own your stack.
+With this package you can subscribe to data changes, store deeply nested data without stringifying and still own your stack.
 
 
 ## Installation
