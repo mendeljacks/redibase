@@ -1,4 +1,4 @@
-import { assocPath, curry, keys, startsWith, values } from 'ramda'
+import { assocPath, curry, keys, startsWith, values,has, equals } from 'ramda'
 import { nested_get } from './lua'
 import { concat_with_dot, json_to_pairs, key_to_path, map_keys, parse, path_to_key } from './pure'
 import { allowable_value_schema, key_or_path_schema } from './schemas'
@@ -66,6 +66,18 @@ const connect = (connection_args, options = {}) => {
         },
         off: (subscription_id) => {
             // subscriptions = find and remove by id
+            const subs = Object.entries(subscriptions)
+            for (let i = 0; i < subs.length; i++) {
+                const key = subs[i][0] 
+                if (has(subscription_id)(subs[i][1])) {
+                    delete subscriptions[key][subscription_id]
+                    if (equals(subscriptions[key], {})) {
+                        delete subscriptions[key]
+                    }
+                }
+
+            }
+            console.log('test')
         },
         client
     }

@@ -173,7 +173,12 @@ test.skip('delete deletes key indices right away', (done) => {
     })()
 })
 test.todo('values can become indexes eg my.name = "shmerel" then set my.name.last = "baker" and expect name to turn into an object')
-test.todo('can unsubscribe')
+test('can unsubscribe', async () => {
+    const subscription_id = redibase.on('popcorn', (new_value, old_value) => {  })
+    redibase.off(subscription_id)
+    return
+})
+
 test.todo('when subprop changes whole object is sent to on fn')
 test.skip('subscribing gives nested data', done => {
     (async () => {
