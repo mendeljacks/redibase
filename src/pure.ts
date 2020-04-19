@@ -1,4 +1,4 @@
-import { adjust, chain, compose, curry, dropLast, equals, fromPairs, has, hasPath, includes, isEmpty, isNil, join, keys, last, map, mergeAll, path, reduce, reject, slice, split, test, toPairs, toString, type, uniq, unnest, without } from "ramda";
+import { adjust, chain, compose, curry, dropLast, equals, fromPairs, has, hasPath, includes, isEmpty, isNil, join, keys, last, map, mergeAll, path, reduce, reject, slice, split, startsWith, test, toPairs, toString, type, uniq, unnest, values, without } from "ramda";
 const serialize = require('serialize-javascript')
 
 export const is_array = el => type(el) === 'Array'
@@ -152,4 +152,39 @@ export const get_required_indexes = (key_list) => {
 
     const commands = map(key => ['hmset', key, indexes_to_add_for_given_key(key, required_indexes, key_list)])(keys(required_indexes))
     return commands
+}
+
+export const remove_subscriptions = (subscription_id, subscriptions) => {
+    const subs = Object.entries(subscriptions)
+    for (let i = 0; i < subs.length; i++) {
+        const key = subs[i][0] 
+        if (has(subscription_id)(subs[i][1])) {
+            delete subscriptions[key][subscription_id]
+            if (equals(subscriptions[key], {})) {
+                delete subscriptions[key]
+            }
+        }
+
+    }
+    return subscriptions
+}
+
+export const on_msg = (subscriptions, channel, message) => {
+    if (channel !== 'changes') return
+    const changes = parse(message)
+    const subscription_keys = keys(subscriptions)
+    const new_keys = keys(changes.new)
+    const old_keys = keys(changes.old)
+    for (let i = 0; i < subscription_keys.length; i++) {
+        const subscription_key = subscription_keys[i];
+        const relevant_new_keys = new_keys.filter(new_key => startsWith(subscription_key, new_key))
+        const relevant_old_keys = old_keys.filter(old_key => startsWith(subscription_key, old_key))
+        if (relevant_new_keys.length > 0) {
+            values(subscriptions[subscription_key]).forEach(fn => fn(
+                relevant_new_keys.reduce((acc, val) => { acc[val] = changes.new[val]; return acc }, {}),
+                relevant_old_keys.reduce((acc, val) => { acc[val] = changes.old[val]; return acc }, {})
+            ))
+        }
+    }
+
 }

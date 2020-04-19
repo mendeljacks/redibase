@@ -1,44 +1,30 @@
-import { assocPath, curry, keys, startsWith, values,has, equals } from 'ramda'
+import Redis from 'ioredis'
+import { assocPath, curry } from 'ramda'
+import Shavaluator from 'redis-evalsha'
+import shortid from 'shortid'
 import { nested_get } from './lua'
-import { concat_with_dot, json_to_pairs, key_to_path, map_keys, parse, path_to_key } from './pure'
+import { concat_with_dot, json_to_pairs, key_to_path, map_keys, on_msg, path_to_key, remove_subscriptions } from './pure'
 import { allowable_value_schema, key_or_path_schema } from './schemas'
 import { user_delete, user_get, user_set } from './user'
-const shortid = require('shortid')
-const Redis = require('ioredis')
-const Shavaluator = require('redis-evalsha')
 
 
 const connect = (connection_args, options = {}) => {
+    // pass connection args directly to redis
     const client = new Redis(connection_args)
+    client.__redibase_options__ = options
+
+    // initialise the lua sha mechanism
     const shavaluator = new Shavaluator(client)
     client.__shavaluator__ = shavaluator
     shavaluator.add('nested_get', nested_get)
-    client.__redibase_options__ = options
+
+    // setup the subscriber to listen for changes
     const subscriber = new Redis(connection_args)
     let subscriptions = {}
     subscriber.subscribe('changes')
-    subscriber.on("message", (channel, message) => {
-        if (channel !== 'changes') return
-        const changes = parse(message)
-        const subscription_keys = keys(subscriptions)
-        const new_keys = keys(changes.new)
-        const old_keys = keys(changes.old)
-        for (let i = 0; i < subscription_keys.length; i++) {
-            const subscription_key = subscription_keys[i];
-            const relevant_new_keys = new_keys.filter(new_key => startsWith(subscription_key, new_key))
-            const relevant_old_keys = old_keys.filter(old_key => startsWith(subscription_key, old_key))
-            if (relevant_new_keys.length > 0) {
-                values(subscriptions[subscription_key]).forEach(fn => fn(
-                    relevant_new_keys.reduce((acc, val) => { acc[val] = changes.new[val]; return acc }, {}),
-                    relevant_old_keys.reduce((acc, val) => { acc[val] = changes.old[val]; return acc }, {})
-                ))
-            }
-        }
+    subscriber.on("message", (channel, message) => on_msg(subscriptions, channel, message))
 
-    })
-
-
-
+    // return the redibase object to users
     return {
         get: (key: string | any[]) => {
             const { error } = key_or_path_schema.validate(key);
@@ -65,19 +51,7 @@ const connect = (connection_args, options = {}) => {
             return subscription_id
         },
         off: (subscription_id) => {
-            // subscriptions = find and remove by id
-            const subs = Object.entries(subscriptions)
-            for (let i = 0; i < subs.length; i++) {
-                const key = subs[i][0] 
-                if (has(subscription_id)(subs[i][1])) {
-                    delete subscriptions[key][subscription_id]
-                    if (equals(subscriptions[key], {})) {
-                        delete subscriptions[key]
-                    }
-                }
-
-            }
-            console.log('test')
+            subscriptions = remove_subscriptions(subscription_id, subscriptions)
         },
         client
     }

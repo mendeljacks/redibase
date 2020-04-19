@@ -40,6 +40,16 @@
       "email": "danielchaimjacks@gmail.com"
     }
   ],
+  "nodemonConfig": {
+    "ignore": [
+      "node_modules"
+    ],
+    "watch": [
+      "./"
+    ],
+    "exec": "npm test",
+    "ext": "ts"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/mendeljacks/redibase.git"

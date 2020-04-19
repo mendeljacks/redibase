@@ -14,7 +14,6 @@ end
 export const nested_get = `
 ${call_in_chunks}
 local map = function(func, array) local new_array = {} for i,v in ipairs(array) do new_array[i] = func(v) end return new_array end
-local filter = function(fn, t) local out = {} for k, v in pairs(t) do if fn(k, v) then out[k] = v end end return out end
 local function to_pairs(obj) 
     local keyset={}
     local n=0
