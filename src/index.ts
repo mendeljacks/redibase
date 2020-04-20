@@ -1,11 +1,11 @@
 import Redis from 'ioredis'
 import { assocPath, curry } from 'ramda'
-import Shavaluator from 'redis-evalsha'
-import shortid from 'shortid'
+import * as shortid from 'shortid'
 import { nested_get } from './lua'
 import { concat_with_dot, json_to_pairs, key_to_path, map_keys, on_msg, path_to_key, remove_subscriptions } from './pure'
 import { allowable_value_schema, key_or_path_schema } from './schemas'
 import { user_delete, user_get, user_set } from './user'
+const Shavaluator = require('redis-evalsha')
 
 
 const connect = (connection_args, options = {}) => {
