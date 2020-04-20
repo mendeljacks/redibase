@@ -1,5 +1,5 @@
 import { adjust, chain, compose, curry, equals, fromPairs, has, hasPath, isEmpty, isNil, join, keys, map, path, reject, split, startsWith, test, toPairs, type, unnest, values } from 'ramda'
-import serialize from 'serialize-javascript'
+const serialize = require('serialize-javascript')
 
 export const is_array = el => type(el) === 'Array'
 export const is_object = el => type(el) === 'Object'
