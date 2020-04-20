@@ -1,5 +1,5 @@
 import { equals, isNil, keys, last, reduce, slice } from "ramda";
-import { get_required_indexes, is_array, pairs_to_json, parse, path_to_key, strict_path_or, stringify, unpair } from "./pure";
+import { get_indexes, is_array, pairs_to_json, parse, path_to_key, strict_path_or, stringify, unpair } from "./pure";
 import { evalsha, redis_commands } from "./redis";
 
 const get_pairs_lua = async (root_key, client, { include_index_keys, max_layers }) => {
@@ -47,7 +47,7 @@ export const user_delete = async (path, client, quiet) => {
 export const user_set = async (path, given_child_pairs, client) => {
     const old_pairs = await user_delete(path, client, true)
     const add_children_command = ['mset', given_child_pairs]
-    const add_to_index_commands = get_required_indexes(keys(given_child_pairs))
+    const add_to_index_commands = get_indexes(keys(given_child_pairs))
     await redis_commands([add_children_command, ...add_to_index_commands], client)
     client.publish('changes', stringify({ old: old_pairs, new: given_child_pairs }))
 

@@ -174,7 +174,7 @@ test.skip('delete deletes key indices right away', (done) => {
 })
 test.todo('values can become indexes eg my.name = "shmerel" then set my.name.last = "baker" and expect name to turn into an object')
 test('can unsubscribe', async () => {
-    const subscription_id = redibase.on('popcorn', (new_value, old_value) => {  })
+    const subscription_id = redibase.on('popcorn', (new_value, old_value) => new_value)
     redibase.off(subscription_id)
     return
 })

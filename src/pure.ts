@@ -1,5 +1,5 @@
-import { adjust, chain, compose, curry, dropLast, equals, fromPairs, has, hasPath, includes, isEmpty, isNil, join, keys, last, map, mergeAll, path, reduce, reject, slice, split, startsWith, test, toPairs, toString, type, uniq, unnest, values, without } from "ramda";
-const serialize = require('serialize-javascript')
+import { adjust, chain, compose, curry, equals, fromPairs, has, hasPath, isEmpty, isNil, join, keys, map, path, reject, split, startsWith, test, toPairs, type, unnest, values } from 'ramda'
+import serialize from 'serialize-javascript'
 
 export const is_array = el => type(el) === 'Array'
 export const is_object = el => type(el) === 'Object'
@@ -18,9 +18,7 @@ export const concat_with_dot = curry((a, b) => compose(
 )([a, b]))
 export const unpair = arr => {
     // convert [key1,val1,key2,val2] to {key1:val1, key2:val2}
-    // console.time('v1')
-    // eslint-disable-next-line prefer-const
-    let output = {}
+    const output = {}
     for (let i = 0; i < arr.length; i++) {
         if (i%2===0) {
             const key = arr[i];
@@ -29,10 +27,6 @@ export const unpair = arr => {
         }
         
     }
-    // console.timeEnd('v1')
-    // console.time('v2')
-    // const output2 = zipObj(arr.filter((a, i) => i % 2 === 0), arr.filter((a, i) => i % 2 === 1))
-    // console.timeEnd('v2')
     return output
 }
 const json_to_path_list = (val) => {
@@ -111,47 +105,26 @@ export const pairs_to_json = pairs => {
 
 export const map_keys = curry((fn, obj) => fromPairs(map(adjust(0, fn), toPairs(obj))))
 
-
-
-export const delete_parent_indices = (missing_paths, data) => {
-
-    const output = reduce((acc, val) => {
-        const old_index = acc[path_to_key(dropLast(1, val))]
-        if (isNil(old_index)) return acc
-        const new_index = without(toString(last(val)))(old_index)
-        const key_to_update = path_to_key(dropLast(1, val))
-        const update_obj = { ...acc, [key_to_update]: new_index }
-        return update_obj
-    }, data, missing_paths)
-
-    return output
-}
-
-
-const parent_keys = shpath => shpath.length > 0 && !equals(shpath, ['']) ? shpath.map((el, i) => ({ [path_to_key(slice(0, i, shpath))]: key_to_path(shpath)[i] })) : []
-
-export const get_required_indexes = (key_list) => {
-    // eslint-disable-next-line prefer-const
-    let required_indexes = {}
-    for (let i = 0; i < key_list.length; i++) {
-        const val = key_list[i];
-        const pkeys = compose(parent_keys, key_to_path)(val)
-
-        for (let j = 0; j < pkeys.length; j++) {
-            const key = Object.keys(pkeys[j])[0]
-            const val = Object.values(pkeys[j])[0]
-            required_indexes[key] = uniq([...(required_indexes[key] || []), val])
-
+export const get_indexes = (keys) => {
+    const indexes = {}
+    for (let i = 0; i < keys.length; i++) {
+        const path_head = []
+        const path_tail = key_to_path(keys[i])
+        const len_path_tail = path_tail.length
+        if (!indexes[""]) indexes[""] = {}
+        indexes[""][path_tail[0]] = len_path_tail > 1 ? 'branch' : 'leaf'
+        for (let j = 0; j < len_path_tail -1; j++) {
+            path_head.push(path_tail.shift())
+            const key = path_to_key(path_head)
+            if (!indexes[key]) {
+                indexes[key] = {}
+            }
+            indexes[key][path_tail[0]] = j === len_path_tail - 2 ? 'leaf' : 'branch'
         }
-
+        
     }
-
-    const indexes_to_add_for_given_key = (key, required_indexes, key_list) => {
-        return mergeAll(required_indexes[key].map(el => ({ [el]: includes(concat_with_dot(key, el), key_list) ? 'leaf' : 'branch' })))
-    }
-
-    const commands = map(key => ['hmset', key, indexes_to_add_for_given_key(key, required_indexes, key_list)])(keys(required_indexes))
-    return commands
+    const output = Object.entries(indexes).map(entry => ['hmset', entry[0], entry[1]])
+    return output
 }
 
 export const remove_subscriptions = (subscription_id, subscriptions) => {
