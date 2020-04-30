@@ -18,27 +18,34 @@ const redibase = connect('redis://....')
 export redibase
 ```
 ## Modify data
-Paths can be given as arrays or strings with dots
+
 ```js
-redibase.set('people', [{name: 'john', age: 29}, {name: 'sandy', age: 26}])) 
-redibase.set(['people', 0, 'age'], 30)
-redibase.set('people.0.age', 31)
+// You can store any valid json objects or values 
+await redibase.set('my_key_name', my_obj) // { my_key_name: {...}}
+
+// You can modify nested values by providing a path
+await redibase.set(['my', 'key', 'path'], 30) // {my: {key: {path: 30}}}
+
+// String with dots can also represent a path
+await redibase.set('my.key.path', 31) // {my: {key: {path: 30}}} (same as above)
 ```
-You can hold references to portions of the json
+
 ```js
+// You can hold references
 const set_sandys_age = redibase.set('people.1.age')
-set_sandys_age(27) 
-set_sandys_age(28) 
+await set_sandys_age(27) 
+await set_sandys_age(28) 
 ```
 ## Retrieve data
 ```js
-redibase.get('people.0')
-redibase.get(['people', 0])
+// You can use a path array or path strings
+const val = await redibase.get('my.nested.key')
+const val = await redibase.get(['my', 'nested','key'])
 ```
 ## Delete data
 ```js
-redibase.delete('people')
-redibase.get('people') // null
+await redibase.delete('people')
+await redibase.get('people') // null
 ```
 
 ## Subscribe to data
@@ -55,7 +62,7 @@ redibase.quit()
 ## Unsupported features
 You can always access the redis directly
 ```js
-redibase.client.mget(my_args)
+await redibase.client.mget(my_args)
 ```
 ## Limitations 
 The maximum number of nesting layers is limited by the javascript recursion depth, which is around 10000. By comparison, firebase allows 32 layers of nesting.
