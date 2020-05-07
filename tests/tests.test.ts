@@ -20,6 +20,13 @@ afterAll(async () => {
     await redibase.quit()
 })
 
+test('can change from obj to value', async () => {
+    await redibase.set('foo', {mykey: {bar: true}})
+    await redibase.set('foo.mykey', 'bar')
+    const x = await redibase.get('foo')
+    expect(x).toEqual({mykey: 'bar'})   
+})
+
 test.skip('can set leaf at root level', async () => {
     await redibase.set('', 1)
     const x = await redibase.get('')
