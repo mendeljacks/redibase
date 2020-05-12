@@ -71,7 +71,6 @@ export const json_to_pairs = (json) => {
     return output
 }
 
-
 const _isInteger = (n) => {return (n << 0) === n;} // copied from ramda
 const assocPathfast = function assocPath(path, val, obj) {
     // eslint-disable-next-line prefer-const
